@@ -1,6 +1,5 @@
-export const post = async (url: string, body: FormData, JWTtoken?: string) => {
-	let headers: any = {
-	};
+export const post = async (url: string, body?: BodyInit, cType='application/json', JWTtoken?: string) => {
+	let headers: any = body ? { 'Content-Type': cType } : {};
 	if (JWTtoken) {
 		headers = {
 			...headers,
@@ -20,7 +19,7 @@ export const post = async (url: string, body: FormData, JWTtoken?: string) => {
 	});
 };
 
-export const getFile = async (url: string, JWTtoken?: string) => {
+export const getUnparsed = async (url: string, JWTtoken?: string) => {
 	let headers;
 	if (JWTtoken) {
 		headers = {

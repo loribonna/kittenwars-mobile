@@ -1,28 +1,29 @@
 import * as React from 'react';
-import { getJWTToken, redirectToLogin } from '../../helpers/helpers';
-import { get, post } from '../../helpers/crud';
-import { IUser, IKitten } from '../../helpers/interfaces';
-import { CreateImageDto } from '../../helpers/dto/create-image';
+import { post } from '../../helpers/crud';
 import { View, Text, Button } from 'react-native';
 import { BASE_URI } from '../../helpers/statics';
 import {
 	GoogleSignin,
 	GoogleSigninButton,
-	statusCodes
+	statusCodes,
+	User
 } from '@react-native-community/google-signin';
+import { setJWTToken, getJWTToken, checkJWTToken } from '../../helpers/helpers';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../../App';
 
-interface LoginProps {}
+interface LoginProps {
+	navigation: StackNavigationProp<RootStackParamList, 'LoggedOut'>;
+}
 
 interface LoginState {
-	loggedIn: boolean;
-	userInfo?: any;
 	isSigninInProgress: boolean;
 }
 
 export class Login extends React.Component<LoginProps, LoginState> {
 	constructor(props) {
 		super(props);
-		this.state = { isSigninInProgress: false, loggedIn: false };
+		this.state = { isSigninInProgress: false };
 	}
 
 	async componentDidMount() {
@@ -34,88 +35,75 @@ export class Login extends React.Component<LoginProps, LoginState> {
 			forceConsentPrompt: true
 		});
 
-		await this.getCurrentUserInfo();
+		const hasSession = await this._checkUserSession();
+		if (!hasSession) {
+			await this.getCurrentUserInfo();
+		} else {
+			this._redirectToLoggedArea();
+		}
+	}
+
+	async _checkUserSession(): Promise<boolean> {
+		const token = await getJWTToken();
+		return checkJWTToken(token);
+	}
+
+	_redirectToLoggedArea() {
+		this.props.navigation.navigate('LoggedIn');
+	}
+
+	async finalizeAuth(userInfo: User) {
+		try {
+			const data: any = await post(
+				BASE_URI + '/auth/google/token?id_token=' + userInfo.idToken
+			);
+			await setJWTToken(data.jwt);
+
+			this._redirectToLoggedArea();
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	async _signIn() {
 		try {
+			this.setState({ ...this.state, isSigninInProgress: true });
 			await GoogleSignin.hasPlayServices();
-			const userInfo = await GoogleSignin.signIn();
-			this.setState({
-				...this.state,
-				userInfo: userInfo,
-				loggedIn: true
-			});
+			const userInfo: User = await GoogleSignin.signIn();
+			await this.finalizeAuth(userInfo);
 		} catch (error) {
+			// error.code = {SIGN_IN_CANCELLED|IN_PROGRESS|PLAY_SERVICES_NOT_AVAILABLE|...}
 			console.log(error);
-			if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-				// user cancelled the login flow
-			} else if (error.code === statusCodes.IN_PROGRESS) {
-				// operation (f.e. sign in) is in progress already
-			} else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-				// play services not available or outdated
-			} else {
-				// some other error happened
-			}
-		}
-	}
-
-	async signOut() {
-		try {
-			await GoogleSignin.revokeAccess();
-			await GoogleSignin.signOut();
-			this.setState({ ...this.state, userInfo: null, loggedIn: false });
-		} catch (error) {
-			console.error(error);
+		} finally {
+			this.setState({ ...this.state, isSigninInProgress: false });
 		}
 	}
 
 	async getCurrentUserInfo() {
 		try {
+			this.setState({ ...this.state, isSigninInProgress: true });
 			const userInfo = await GoogleSignin.signInSilently();
-			this.setState({
-				...this.state,
-				userInfo: userInfo,
-				loggedIn: userInfo != null ? true : false
-			});
+			await this.finalizeAuth(userInfo);
 		} catch (error) {
-			if (error.code === statusCodes.SIGN_IN_REQUIRED) {
-				// user has not signed in yet
-				this.setState({ ...this.state, loggedIn: false });
-			} else {
-				// some other error
-				this.setState({ ...this.state, loggedIn: false });
-			}
+			//error.code = {SIGN_IN_REQUIRED|...}
+			console.log(error);
+		} finally {
+			this.setState({ ...this.state, isSigninInProgress: false });
 		}
 	}
-
-	async handleOAuthLogin() {}
 
 	render() {
 		return (
 			<View>
-				{!this.state.loggedIn && (
-					<View>
-						<Text>You are currently logged out</Text>
+				<Text>You are currently logged out</Text>
 
-						<GoogleSigninButton
-							style={{ width: 192, height: 48 }}
-							size={GoogleSigninButton.Size.Wide}
-							color={GoogleSigninButton.Color.Dark}
-							onPress={this._signIn.bind(this)}
-							disabled={this.state.isSigninInProgress}
-						/>
-					</View>
-				)}
-
-				{this.state.loggedIn && (
-					<View>
-						<Button
-							onPress={this.signOut.bind(this)}
-							title="Signout"
-							color="#841584"></Button>
-					</View>
-				)}
+				<GoogleSigninButton
+					style={{ width: 192, height: 48 }}
+					size={GoogleSigninButton.Size.Wide}
+					color={GoogleSigninButton.Color.Dark}
+					onPress={this._signIn.bind(this)}
+					disabled={this.state.isSigninInProgress}
+				/>
 			</View>
 		);
 	}
