@@ -1,22 +1,34 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Kittens } from './src/screens/kittens/kittens';
 import { User } from './src/screens/user/user';
 import { Login } from './src/screens/login/login';
+import { UnloggedScreen } from './src/screens/unlogged/unlogged';
 import { getJWTToken } from './src/helpers/helpers';
 import { get } from './src/helpers/crud';
 import { IUser } from './src/helpers/interfaces';
-import { createStackNavigator } from '@react-navigation/stack';
+import {
+	createStackNavigator,
+	StackNavigationProp
+} from '@react-navigation/stack';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export type RootStackParamList = {
-	LoggedOut: any;
-	LoggedIn: any;
+	Login: any;
+	Logged: any;
+	Unlogged: any;
 };
+
+export interface LoggedStackNavigationProp {
+	stackNavigation: StackNavigationProp<RootStackParamList, 'Logged'>;
+}
+export interface UnoggedStackNavigationProp {
+	stackNavigation: StackNavigationProp<RootStackParamList, 'Unlogged'>;
+}
 
 interface AppProps {}
 interface AppState {
@@ -44,43 +56,49 @@ export default class App extends React.Component<AppProps, AppState> {
 		this.setState({ ...this.state, logged: hasSession });
 	}
 
-	async checkAdmin(token?: string): Promise<void> {
-		const t = token ? token : await getJWTToken();
-		const userInfo: IUser = await get('/users', t);
-		if (userInfo.isAdmin) {
-			this.setState({ ...this.state, isAdmin: true });
-		}
-	}
-
 	async checkSession(): Promise<boolean> {
-		let ret = false;
 		try {
 			const token = await getJWTToken();
 
 			if (token) {
 				await get('/auth/jwt_check', token);
-				ret = true;
-				await this.checkAdmin(token);
+				return true;
 			}
 		} catch (e) {
 			console.log(e);
 		}
 
-		return ret;
+		return false;
 	}
 
 	async checkAuth(valid: Boolean) {
-		console.log(valid);
 		this.setState({ ...this.state, logged: valid });
-		await this.checkAdmin();
+	}
+
+	redirectToLogin(navigation) {
+		navigation.navigate('Login');
 	}
 
 	render() {
 		return (
 			<NavigationContainer>
-				<Stack.Navigator initialRouteName="LoggedOut">
-					<Stack.Screen name="LoggedOut" component={Login} />
-					<Stack.Screen name="LoggedIn" component={LoggedScreen} />
+				<Stack.Navigator initialRouteName="Unlogged">
+					<Stack.Screen
+						options={({ navigation }) => ({
+							headerRight: () => (
+								<Button
+									onPress={() =>
+										this.redirectToLogin(navigation)
+									}
+									title="Login"
+								/>
+							)
+						})}
+						name="Unlogged"
+						component={UnloggedScreen}
+					/>
+					<Stack.Screen name="Login" component={Login} />
+					<Stack.Screen name="Logged" component={LoggedScreen} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		);

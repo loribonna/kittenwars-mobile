@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { getJWTToken, redirectToLogin } from '../../helpers/helpers';
+import { getJWTToken } from '../../helpers/helpers';
 import { get, post } from '../../helpers/crud';
 import { IUser, IKitten } from '../../helpers/interfaces';
-import { CreateImageDto } from '../../helpers/dto/create-image';
 import { View, Text } from 'react-native';
+import { LoggedStackNavigationProp } from '../../../App';
 
-interface UserProps {}
+interface UserProps extends LoggedStackNavigationProp {}
 
 interface UserState {
 	userScore: Number;
@@ -45,39 +45,39 @@ export class User extends React.Component<UserProps, UserState> {
 
 	async loadUserScore() {
 		try {
-			const token = getJWTToken();
+			const token = await getJWTToken();
 
 			const score = await get('/users/score', token);
 			this.setState({ ...this.state, userScore: score });
 		} catch (e) {
 			if (e.status === 401) {
-				redirectToLogin();
+				this.props.stackNavigation.replace('Unlogged')
 			}
 		}
 	}
 
 	async loadScoreBoard() {
 		try {
-			const token = getJWTToken();
+			const token = await getJWTToken();
 
 			const board = await get('/users/board', token);
 			this.setState({ ...this.state, scoreBoard: board });
 		} catch (e) {
 			if (e.status === 401) {
-				redirectToLogin();
+				this.props.stackNavigation.replace('Unlogged')
 			}
 		}
 	}
 
 	async getUserBoaardPosition() {
 		try {
-			const token = getJWTToken();
+			const token = await getJWTToken();
 
 			const position = await get('/users/position', token);
 			this.setState({ ...this.state, userPosition: position });
 		} catch (e) {
 			if (e.status === 401) {
-				redirectToLogin();
+				this.props.stackNavigation.replace('Unlogged')
 			}
 		}
 	}
@@ -89,13 +89,10 @@ export class User extends React.Component<UserProps, UserState> {
 			return;
 		}
 		try {
-			const token = getJWTToken();
+			const token = await getJWTToken();
 
 			const formData = new FormData();
 			formData.append('image', this.state.fileUpl);
-
-			const dto = new CreateImageDto(this.state.fileUpl);
-			await dto.validateOrReject();
 
 			const insertedKitten: IKitten = await post(
 				'/kittens',
@@ -107,7 +104,7 @@ export class User extends React.Component<UserProps, UserState> {
 			this.setState({ ...this.state, fileOk: false });
 
 			if (e.status === 401) {
-				redirectToLogin();
+				this.props.stackNavigation.replace('Unlogged')
 			}
 		}
 	}

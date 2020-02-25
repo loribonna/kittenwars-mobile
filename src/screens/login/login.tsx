@@ -13,7 +13,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../App';
 
 interface LoginProps {
-	navigation: StackNavigationProp<RootStackParamList, 'LoggedOut'>;
+	navigation: StackNavigationProp<RootStackParamList, 'Login'>;
 }
 
 interface LoginState {
@@ -49,7 +49,7 @@ export class Login extends React.Component<LoginProps, LoginState> {
 	}
 
 	_redirectToLoggedArea() {
-		this.props.navigation.navigate('LoggedIn');
+		this.props.navigation.replace('Logged');
 	}
 
 	async finalizeAuth(userInfo: User) {

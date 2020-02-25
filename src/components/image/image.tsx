@@ -1,8 +1,14 @@
 import * as React from 'react';
 import { KITTENS_URI } from '../../helpers/statics';
-import { getFile } from '../../helpers/crud';
+import { getUnparsed } from '../../helpers/crud';
 import { getJWTToken } from '../../helpers/helpers';
-import { View, TouchableHighlight, Image } from 'react-native';
+import {
+	View,
+	TouchableOpacity,
+	Image,
+	Text,
+	TouchableHighlight
+} from 'react-native';
 
 interface ImageDisplayProps {
 	imageID?: string;
@@ -48,7 +54,7 @@ export class ImageDisplay extends React.Component<
 			: this.composeUri(this.state.imageID);
 	}
 
-	imageClick(event) {
+	imageClick() {
 		if (this.props.onClick) {
 			this.props.onClick(this.props.imageID);
 		}
@@ -85,7 +91,7 @@ export class ImageDisplay extends React.Component<
 		const token = await getJWTToken();
 
 		try {
-			const img = await getFile(this.getUri(), token);
+			const img = await getUnparsed(this.getUri(), token);
 
 			if (this._mounted) {
 				this.setState({ ...this.state, img: img });
@@ -105,18 +111,19 @@ export class ImageDisplay extends React.Component<
 		return (
 			<View>
 				{this.props.onClick && (
-					<TouchableHighlight onPress={this.imageClick.bind(this)}>
+					<TouchableHighlight
+						onPress={this.imageClick.bind(this)}>
 						<Image
-							key={this.state.imageID as string}
-							style={{ width: 100, height: 100 }}
+							key={this.state.imageID}
+							style={{ height:"100%",width:null, resizeMode:"contain" }}
 							source={{ uri: this.getImg() }}
 						/>
 					</TouchableHighlight>
 				)}
 				{!this.props.onClick && (
 					<Image
-						key={this.state.imageID as string}
-						style={{ width: 100, height: 100 }}
+						key={this.state.imageID}
+						style={{ height:"95%",width:null, resizeMode:"contain" }}
 						source={{ uri: this.getImg() }}
 					/>
 				)}
