@@ -2,20 +2,17 @@ import * as React from 'react';
 import { get } from '../../helpers/crud';
 import { IKitten } from '../../helpers/interfaces';
 import { View, Text } from 'react-native';
-import { ImageDisplay } from '../../components/image/image';
+import { ImageDisplay } from '../image/image';
 import { BASE_URI } from '../../helpers/statics';
 
-interface UnloggedScreenProps {}
+interface ScoreProps {}
 
-interface UnloggedScreenState {
+interface ScoreState {
 	bestKittens: IKitten[];
 	worstKittens: IKitten[];
 }
 
-export class UnloggedScreen extends React.Component<
-	UnloggedScreenProps,
-	UnloggedScreenState
-> {
+export abstract class ScoreBase extends React.Component<ScoreProps, ScoreState> {
 	constructor(props) {
 		super(props);
 		this.state = { bestKittens: [], worstKittens: [] };
@@ -28,7 +25,7 @@ export class UnloggedScreen extends React.Component<
 
 	async loadMostLikedKitten() {
 		try {
-            const kittens = await get(BASE_URI + '/score/best');
+			const kittens = await get(BASE_URI + '/score/best');
 			this.setState({ ...this.state, bestKittens: kittens });
 		} catch (e) {
 			console.log(e);

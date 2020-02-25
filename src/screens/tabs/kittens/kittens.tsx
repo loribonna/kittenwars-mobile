@@ -1,17 +1,13 @@
 import * as React from 'react';
-import { ImageDisplay } from '../../components/image/image';
-import { get, put } from '../../helpers/crud';
-import { VOTE_URI } from '../../helpers/statics';
-import { IKitten } from '../../helpers/interfaces';
-import {
-	getJWTToken
-} from '../../helpers/helpers';
+import { ImageDisplay } from '../../../components/image/image';
+import { get, put } from '../../../helpers/crud';
+import { VOTE_URI } from '../../../helpers/statics';
+import { IKitten } from '../../../helpers/interfaces';
+import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
 import { View, Text, Dimensions } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList, LoggedStackNavigationProp } from '../../../App';
 
-interface KittensProps extends BottomTabBarProps, LoggedStackNavigationProp {}
+interface KittensProps extends BottomTabBarProps {}
 
 interface KittensState {
 	leftKitten?: IKitten;
@@ -59,7 +55,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 			}
 		} catch (e) {
 			if (e.status === 401) {
-				this.props.stackNavigation.replace("Unlogged");
+				overwriteNavigation(this.props.navigation, 'Unlogged');
 			}
 		} finally {
 			this.setState({ ...this.state, ...newState });
@@ -97,7 +93,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 			this.setState({ ...this.state, win: win });
 		} catch (e) {
 			if (e.status === 401) {
-				this.props.stackNavigation.replace("Unlogged");
+				overwriteNavigation(this.props.navigation, 'Unlogged');
 			}
 		}
 	}
@@ -113,7 +109,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 					{this.state.leftKitten && (
 						<View style={{ height: '50%', width: null }}>
 							<ImageDisplay
-								key={this.state.leftKitten.savedName as string}
+								key={this.state.leftKitten.savedName}
 								imageID={this.state.leftKitten.savedName}
 								onClick={this.voteKitten.bind(
 									this
@@ -123,7 +119,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 					{this.state.rightKitten && (
 						<View style={{ height: '50%', width: null }}>
 							<ImageDisplay
-								key={this.state.rightKitten.savedName as string}
+								key={this.state.rightKitten.savedName}
 								imageID={this.state.rightKitten.savedName}
 								onClick={this.voteKitten.bind(
 									this

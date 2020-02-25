@@ -1,16 +1,17 @@
 import * as React from 'react';
-import { post } from '../../helpers/crud';
+import { post } from '../../../helpers/crud';
 import { View, Text, Button } from 'react-native';
-import { BASE_URI } from '../../helpers/statics';
+import { BASE_URI } from '../../../helpers/statics';
 import {
 	GoogleSignin,
 	GoogleSigninButton,
 	statusCodes,
 	User
 } from '@react-native-community/google-signin';
-import { setJWTToken, getJWTToken, checkJWTToken } from '../../helpers/helpers';
+import { setJWTToken, getJWTToken, checkJWTToken, overwriteNavigation } from '../../../helpers/helpers';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../../App';
+import { RootStackParamList } from '../../../../App';
+import { CommonActions } from '@react-navigation/native';
 
 interface LoginProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Login'>;
@@ -49,7 +50,7 @@ export class Login extends React.Component<LoginProps, LoginState> {
 	}
 
 	_redirectToLoggedArea() {
-		this.props.navigation.replace('Logged');
+		overwriteNavigation(this.props.navigation, "Logged");
 	}
 
 	async finalizeAuth(userInfo: User) {
