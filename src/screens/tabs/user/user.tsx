@@ -1,13 +1,16 @@
 import * as React from 'react';
 import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
 import { get, post } from '../../../helpers/crud';
-import { IUser, IKitten } from '../../../helpers/interfaces';
-import { View, Text, FlatList, Button } from 'react-native';
+import { IUser } from '../../../helpers/interfaces';
+import { View, Text, FlatList, Button, Image } from 'react-native';
 import { BASE_URI } from '../../../helpers/statics';
-import { Camera } from '../../stack/camera.tsx/camera';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../../../App';
+import { TakePictureResponse } from 'react-native-camera';
 
-interface UserProps extends BottomTabBarProps {}
+interface UserProps {
+	navigation: StackNavigationProp<RootStackParamList, 'Logged'>;
+}
 
 interface UserState {
 	userScore: Number;
@@ -16,6 +19,7 @@ interface UserState {
 	fileUpl?: File;
 	fileOk?: boolean;
 	loading: boolean;
+	image?: string;
 }
 
 interface UserElementProp {
@@ -55,6 +59,7 @@ export class User extends React.Component<UserProps, UserState> {
 			this.loadScoreBoard(),
 			this.getUserBoaardPosition()
 		]);
+
 		this.setState({ ...this.state, loading: false });
 	}
 
@@ -133,17 +138,35 @@ export class User extends React.Component<UserProps, UserState> {
 	// 	// }
 	// }
 
+	onGoBack(data: TakePictureResponse) {
+		if (data && data.uri) {
+			this.setState({ ...this.state, image: data.uri });
+		}
+	}
+
 	goToCamera() {
-		this.props.navigation.navigate("Camera");
+		this.props.navigation.navigate('Camera', {
+			onGoBack: this.onGoBack.bind(this)
+		});
 	}
 
 	render() {
 		return (
 			<View>
-				<Button onPress={this.goToCamera.bind(this)} title="Camera"/>
+				<Button onPress={this.goToCamera.bind(this)} title="Camera" />
+				{this.state.image && (
+					<Image
+						style={{
+							height: '60%',
+							width: null,
+							resizeMode: 'contain'
+						}}
+						source={{ uri: this.state.image }}
+					/>
+				)}
 				{this.state.loading && <Text>Loading user data...</Text>}
 				{!this.state.loading && (
-					<View style={{paddingTop:10}}>
+					<View style={{ paddingTop: 10 }}>
 						<Text>USER SCORE {this.state.userScore}</Text>
 						<Text>USER POSITION {this.state.userPosition}</Text>
 						<Text>SCORE BOARD:</Text>

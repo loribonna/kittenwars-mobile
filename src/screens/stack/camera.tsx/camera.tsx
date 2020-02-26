@@ -17,7 +17,6 @@ import {
 	CameraType,
 	FlashMode
 } from 'react-native-camera';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
 import { Toolbar } from '../../../components/toolbar/toolbar';
@@ -30,6 +29,7 @@ interface CameraState {
 	cameraType: keyof CameraType;
 	flashMode: keyof FlashMode;
 	capturing: Boolean;
+	onGoBack?: Function;
 }
 
 const cameraStyle = StyleSheet.create({
@@ -51,13 +51,32 @@ export class Camera extends React.Component<CameraProps, CameraState> {
 		};
 	}
 
+	componentDidUpdate(state) {
+		if (
+			!this.state.onGoBack &&
+			state &&
+			state.route &&
+			state.route.params &&
+			state.route.params.onGoBack
+		) {
+			this.setState({
+				...this.state,
+				onGoBack: state.route.params.onGoBack
+			});
+		}
+	}
+
 	async takePicture(event: GestureResponderEvent): Promise<void> {
 		this.setState({ ...this.state, capturing: true });
 		try {
 			const options = { quality: 0.5, base64: true };
 			const data = await this.camera.takePictureAsync(options);
-			//  eslint-disable-next-line
-			console.log(data.uri);
+
+			if (this.state.onGoBack) {
+				this.state.onGoBack(data);
+			}
+			this.props.navigation.goBack();
+
 		} catch (e) {
 			console.log(e);
 		} finally {
@@ -66,7 +85,6 @@ export class Camera extends React.Component<CameraProps, CameraState> {
 	}
 
 	_handleAppStateChange = (nextAppState: AppStateStatus) => {
-		/* Reference to RNCamera instance */
 		if (!this.camera) {
 			return;
 		}
