@@ -13,7 +13,8 @@ import {
 	createStackNavigator,
 	StackNavigationProp
 } from '@react-navigation/stack';
-import { Camera } from './src/screens/stack/camera.tsx/camera';
+import { InsertKitten } from './src/screens/stack/insert/insert';
+import { BASE_URI } from './src/helpers/statics';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -22,7 +23,7 @@ export type RootStackParamList = {
 	Login: any;
 	Logged: any;
 	Unlogged: any;
-	Camera: any;
+	Insert: any;
 };
 
 interface AppProps {}
@@ -49,17 +50,12 @@ export default class App extends React.Component<AppProps, AppState> {
 		this.state = { isAdmin: false, logged: false };
 	}
 
-	async componentDidMount() {
-		const hasSession = await this.checkSession();
-		this.setState({ ...this.state, logged: hasSession });
-	}
-
 	async checkSession(): Promise<boolean> {
 		try {
 			const token = await getJWTToken();
 
 			if (token) {
-				await get('/auth/jwt_check', token);
+				await get(BASE_URI + '/auth/jwt_check', token);
 				return true;
 			}
 		} catch (e) {
@@ -99,7 +95,9 @@ export default class App extends React.Component<AppProps, AppState> {
 					<Stack.Screen
 						name="Logged"
 						component={LoggedScreen}
-						initialParams={({navigation})=>({stackNavigation: navigation})}
+						initialParams={({ navigation }) => ({
+							stackNavigation: navigation
+						})}
 						options={({ navigation }) => ({
 							headerRight: () => (
 								<Button
@@ -107,10 +105,14 @@ export default class App extends React.Component<AppProps, AppState> {
 									title="Logout"
 								/>
 							),
-							headerTitle: "Kittenwars!"
+							headerTitle: 'Kittenwars!'
 						})}
 					/>
-					<Stack.Screen options={{headerShown:false}} name="Camera" component={Camera}></Stack.Screen>
+					<Stack.Screen
+						name="Insert"
+						component={InsertKitten}
+						options={{ headerTitle: 'Insert Kitten!' }}
+					/>
 				</Stack.Navigator>
 			</NavigationContainer>
 		);

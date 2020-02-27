@@ -1,4 +1,9 @@
-export const post = async (url: string, body?: BodyInit, cType='application/json', JWTtoken?: string) => {
+export const post = async (
+	url: string,
+	body?: BodyInit,
+	JWTtoken?: string,
+	cType = 'application/json'
+) => {
 	let headers: any = body ? { 'Content-Type': cType } : {};
 	if (JWTtoken) {
 		headers = {
@@ -16,6 +21,31 @@ export const post = async (url: string, body?: BodyInit, cType='application/json
 			throw { status: res.status };
 		}
 		return res.json();
+	});
+};
+
+export const postFile = async (
+	url: string,
+	body: FormData,
+	JWTtoken?: string
+) => {
+	let headers: any = { 'Content-Type': 'multipart/form-data' };
+	if (JWTtoken) {
+		headers = {
+			...headers,
+			Authorization: `Bearer ${JWTtoken}`
+		};
+	}
+
+	return fetch(url, {
+		method: 'POST',
+		body: body,
+		headers: headers
+	}).then(res => {
+		if (!res.ok) {
+			throw { status: res.status };
+		}
+		return res.text();
 	});
 };
 

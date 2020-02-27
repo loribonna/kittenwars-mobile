@@ -8,10 +8,9 @@ import {
 	statusCodes,
 	User
 } from '@react-native-community/google-signin';
-import { setJWTToken, getJWTToken, checkJWTToken, overwriteNavigation } from '../../../helpers/helpers';
+import { setJWTToken, overwriteNavigation } from '../../../helpers/helpers';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
-import { CommonActions } from '@react-navigation/native';
 
 interface LoginProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Login'>;
@@ -36,17 +35,7 @@ export class Login extends React.Component<LoginProps, LoginState> {
 			forceConsentPrompt: true
 		});
 
-		const hasSession = await this._checkUserSession();
-		if (!hasSession) {
-			await this.getCurrentUserInfo();
-		} else {
-			this._redirectToLoggedArea();
-		}
-	}
-
-	async _checkUserSession(): Promise<boolean> {
-		const token = await getJWTToken();
-		return checkJWTToken(token);
+		await this.getCurrentUserInfo();
 	}
 
 	_redirectToLoggedArea() {

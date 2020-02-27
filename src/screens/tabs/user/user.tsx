@@ -2,11 +2,10 @@ import * as React from 'react';
 import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
 import { get, post } from '../../../helpers/crud';
 import { IUser } from '../../../helpers/interfaces';
-import { View, Text, FlatList, Button, Image } from 'react-native';
+import { View, Text, FlatList, Button, Image, ScrollView } from 'react-native';
 import { BASE_URI } from '../../../helpers/statics';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
-import { TakePictureResponse } from 'react-native-camera';
 
 interface UserProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Logged'>;
@@ -19,7 +18,6 @@ interface UserState {
 	fileUpl?: File;
 	fileOk?: boolean;
 	loading: boolean;
-	image?: string;
 }
 
 interface UserElementProp {
@@ -103,6 +101,7 @@ export class User extends React.Component<UserProps, UserState> {
 	}
 
 	async insertNewKitten(event) {
+		this.props.navigation.navigate('Insert');
 		// event.preventDefault();
 		// if (!this.state.fileUpl) {
 		// 	return;
@@ -138,53 +137,39 @@ export class User extends React.Component<UserProps, UserState> {
 	// 	// }
 	// }
 
-	onGoBack(data: TakePictureResponse) {
-		if (data && data.uri) {
-			this.setState({ ...this.state, image: data.uri });
-		}
-	}
-
-	goToCamera() {
-		this.props.navigation.navigate('Camera', {
-			onGoBack: this.onGoBack.bind(this)
-		});
-	}
-
 	render() {
 		return (
 			<View>
-				<Button onPress={this.goToCamera.bind(this)} title="Camera" />
-				{this.state.image && (
-					<Image
-						style={{
-							height: '60%',
-							width: null,
-							resizeMode: 'contain'
-						}}
-						source={{ uri: this.state.image }}
+				<ScrollView>
+					<Button
+						onPress={this.insertNewKitten.bind(this)}
+						title="Insert new Kitten!"
 					/>
-				)}
-				{this.state.loading && <Text>Loading user data...</Text>}
-				{!this.state.loading && (
-					<View style={{ paddingTop: 10 }}>
-						<Text>USER SCORE {this.state.userScore}</Text>
-						<Text>USER POSITION {this.state.userPosition}</Text>
-						<Text>SCORE BOARD:</Text>
-						<FlatList
-							data={this.state.scoreBoard}
-							renderItem={({ item, index }) => (
+					{this.state.loading && <Text>Loading user data...</Text>}
+					{!this.state.loading && (
+						<View style={{ paddingTop: 10 }}>
+							<Text>USER SCORE {this.state.userScore}</Text>
+							<Text>USER POSITION {this.state.userPosition}</Text>
+							<Text>SCORE BOARD:</Text>
+							{this.state.scoreBoard.map((item, index) => (
 								<UserElement
 									key={item.account.id as string}
 									user={item}
 									index={index}
 								/>
+							))}
+							{/* <FlatList
+							data={this.state.scoreBoard}
+							renderItem={({ item, index }) => (
+								
 							)}
 							keyExtractor={(item, index) =>
 								item.account.id.toString()
 							}
-						/>
-					</View>
-				)}
+						/> */}
+						</View>
+					)}
+				</ScrollView>
 			</View>
 		);
 	}
