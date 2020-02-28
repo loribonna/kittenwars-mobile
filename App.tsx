@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'react-native';
+import { Button, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Kittens } from './src/screens/tabs/kittens/kittens';
@@ -15,6 +15,7 @@ import {
 } from '@react-navigation/stack';
 import { InsertKitten } from './src/screens/stack/insert/insert';
 import { BASE_URI } from './src/helpers/statics';
+import { styleBase } from './src/helpers/style.base';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -80,17 +81,21 @@ export default class App extends React.Component<AppProps, AppState> {
 					<Stack.Screen
 						options={({ navigation }) => ({
 							headerRight: () => (
-								<Button
-									onPress={() =>
-										this.redirectToLogin(navigation)
-									}
-									title="Login"
-								/>
-							)
+								<View style={{ paddingRight: 10 }}>
+									<Button
+										onPress={() =>
+											this.redirectToLogin(navigation)
+										}
+										title="Login"
+									/>
+								</View>
+							),
+							headerTitle: 'Best Kitten!'
 						})}
 						name="Unlogged"
 						component={UnloggedScreen}
 					/>
+
 					<Stack.Screen name="Login" component={Login} />
 					<Stack.Screen
 						name="Logged"
@@ -100,10 +105,13 @@ export default class App extends React.Component<AppProps, AppState> {
 						})}
 						options={({ navigation }) => ({
 							headerRight: () => (
-								<Button
-									onPress={() => logout(navigation)}
-									title="Logout"
-								/>
+								<View style={{ paddingRight: 10 }}>
+									<Button
+										color={styleBase.primaryColor}
+										onPress={() => logout(navigation)}
+										title="Logout"
+									/>
+								</View>
 							),
 							headerTitle: 'Kittenwars!'
 						})}
