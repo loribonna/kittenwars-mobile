@@ -8,7 +8,7 @@
 		"link": "react-native link",
 		"test": "jest",
 		"android:release": "react-native run-android --variant=release",
-		"android:bundle": " react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
+		"android:bundle": "cd android && react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
 		"android:release:nobundle": "./gradlew assembleRelease -x bundleReleaseJsAndAssets",
 		"android:clean":"./gradlew clean app:assembleRelease -x bundleReleaseJsAndAssets"
 	},
