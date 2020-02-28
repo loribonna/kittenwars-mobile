@@ -5,4 +5,5 @@ export type Partial<T> = {
 export type SubjectData = {
 	name: string;
 	value: any;
+	type?: 'number' | 'string';
 };
