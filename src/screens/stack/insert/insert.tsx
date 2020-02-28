@@ -14,12 +14,12 @@ import ImagePicker, {
 	ImagePickerOptions,
 	ImagePickerResponse
 } from 'react-native-image-picker';
-import { TextInput } from 'react-native-gesture-handler';
 import { IKitten } from '../../../helpers/interfaces';
 import { SubjectData } from '../../../helpers/types';
 import { BASE_URI } from '../../../helpers/statics';
-import { post, postFile } from '../../../helpers/crud';
+import { postFile } from '../../../helpers/crud';
 import { getJWTToken } from '../../../helpers/helpers';
+import { CustomTextInput } from '../../../components/input/textinput';
 
 const MAX_IMAGE_SIZE = 16 * 1024 * 1024 - 1; // 16 MB
 
@@ -33,18 +33,8 @@ interface InsertState {
 	kittenInfo: Partial<IKitten>;
 	confirmable: boolean;
 	loading: boolean;
+	editing: boolean;
 }
-
-const style = StyleSheet.create({
-	textInput: {
-		alignSelf: 'center',
-		justifyContent: 'center',
-		borderRadius: 30,
-		borderWidth: 2,
-		borderColor: 'lightblue',
-		width: "80%"
-	}
-});
 
 const imagePickerAsync = async (options: ImagePickerOptions) =>
 	new Promise(
@@ -67,7 +57,12 @@ const imagePickerAsync = async (options: ImagePickerOptions) =>
 export class InsertKitten extends React.Component<InsertProp, InsertState> {
 	constructor(props) {
 		super(props);
-		this.state = { kittenInfo: {}, confirmable: false, loading: false };
+		this.state = {
+			kittenInfo: {},
+			confirmable: false,
+			loading: false,
+			editing: false
+		};
 	}
 
 	async takePicture() {
@@ -94,13 +89,23 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 	}
 
 	updateData(data: SubjectData) {
+		let value = data.value;
+		if (data.type) {
+			if (data.type == 'number' && !isNaN(Number(value))) {
+				value = Number(value);
+			}
+		}
+		const confirmable: boolean =
+			data.name === 'name'
+				? data.value
+					? this.checkState()
+					: false
+				: this.state.confirmable;
+
 		this.setState({
 			...this.state,
-			kittenInfo: { ...this.state.kittenInfo, [data.name]: data.value },
-			confirmable:
-				data.name === 'name' && this.checkState()
-					? true
-					: this.state.confirmable
+			kittenInfo: { ...this.state.kittenInfo, [data.name]: value },
+			confirmable: confirmable
 		});
 	}
 
@@ -138,81 +143,104 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 		}
 	}
 
+	onEditingStart() {
+		if (!this.state.editing) {
+			this.setState({ ...this.state, editing: true });
+		}
+	}
+
+	onEditingEnd() {
+		if (this.state.editing) {
+			this.setState({ ...this.state, editing: false });
+		}
+	}
+
 	render() {
 		return (
 			<View
 				style={{
 					flex: 1,
-					alignItems: 'center'
+					alignItems: 'center',
+					height: '100%'
 				}}>
-				<View style={{ height: '18%', paddingTop: '1%', width:"100%" }}>
-					<TextInput
-						style={style.textInput}
+				<View
+					style={{ height: '18%', paddingTop: '1%', width: '100%' }}>
+					<CustomTextInput
+						name="name"
+						value={this.state.kittenInfo.name?.toString()}
+						maxlen={40}
 						placeholder="Kitten name"
-						maxLength={40}
-						value={this.state.kittenInfo.name?.toString()}
-						onChangeText={text =>
-							this.updateData({ name: 'name', value: text })
-						}
+						onTextChange={data => this.updateData(data)}
+						onEditingStart={this.onEditingStart.bind(this)}
+						onEditingEnd={this.onEditingEnd.bind(this)}
 					/>
-                    <View  style={{ paddingTop: '1%' }} />
-					<TextInput
-						style={style.textInput}
+
+					<View style={{ paddingTop: '1%' }} />
+					<CustomTextInput
+						name="age"
+						type="number"
+						value={this.state.kittenInfo.age?.toString()}
+						maxlen={2}
 						placeholder="Age (Optional)"
-						maxLength={2}
-						keyboardType="numeric"
-						value={this.state.kittenInfo.name?.toString()}
-						onChangeText={text =>
-							this.updateData({ name: 'name', value: text })
-						}
+						onEditingStart={this.onEditingStart.bind(this)}
+						onEditingEnd={this.onEditingEnd.bind(this)}
+						onTextChange={data => this.updateData(data)}
 					/>
 				</View>
 
-				<View
-					style={{
-						height: '60%',
-						width: '100%'
-					}}>
-					{this.state.image && (
-						<Image
-							style={{
-								height: '100%',
-								width: null,
-								resizeMode: 'contain'
-							}}
-							source={{ uri: this.state.image.uri }}
-						/>
-					)}
-					<View style={{ paddingTop: '5%' }}>
-						<Button
-							disabled={this.state.loading}
-							onPress={this.takePicture.bind(this)}
-							title={
-								this.state.image
-									? 'Change picture'
-									: 'Take picture'
-							}
-						/>
-					</View>
-				</View>
-
-				<View
-					style={{ height: '10%', position: 'absolute', bottom: 0 }}>
-					{!this.state.confirmable && (
-						<View
-							style={{
-								justifyContent: 'center',
-								alignItems: 'center',
-								bottom: 0
-							}}>
+				{!this.state.editing && (
+					<View
+						style={{
+							height: '60%',
+							width: '100%',
+							paddingTop: this.state.image ? '8%' : '1%'
+						}}>
+						{this.state.image && (
+							<Image
+								style={{
+									height: '100%',
+									width: null,
+									resizeMode: 'contain'
+								}}
+								source={{ uri: this.state.image.uri }}
+							/>
+						)}
+						<View style={{ paddingTop: '5%' }}>
 							<Button
 								disabled={this.state.loading}
-								onPress={this.insertKitten.bind(this)}
-								title="Confirm"
+								onPress={this.takePicture.bind(this)}
+								title={
+									this.state.image
+										? 'Change picture'
+										: 'Take picture'
+								}
 							/>
 						</View>
-					)}
-				</View>
+					</View>
+				)}
+				{!this.state.editing && (
+					<View
+						style={{
+							height: '10%',
+							position: 'absolute',
+							bottom: 0
+						}}>
+						{this.state.confirmable && (
+							<View
+								style={{
+									justifyContent: 'center',
+									alignItems: 'center',
+									bottom: 0
+								}}>
+								<Button
+									disabled={this.state.loading}
+									onPress={this.insertKitten.bind(this)}
+									title="Confirm"
+								/>
+							</View>
+						)}
+					</View>
+				)}
 			</View>
 		);
 	}
