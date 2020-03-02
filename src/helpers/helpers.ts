@@ -6,7 +6,11 @@ import { BASE_URI } from './statics';
 import { CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../App';
-import { GoogleSignin } from '@react-native-community/google-signin';
+import {
+	GoogleSignin,
+	statusCodes,
+	User
+} from '@react-native-community/google-signin';
 
 export const getJWTToken = async () => {
 	const token = await AsyncStorage.getItem('token');
