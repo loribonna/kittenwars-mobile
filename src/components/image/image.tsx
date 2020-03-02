@@ -18,6 +18,9 @@ interface ImageDisplayProps {
 	fullUri?: string;
 	label?: string;
 	onLoadingEnd?: (ref: ImageDisplay) => void;
+	disableRadius?: boolean;
+	onImageChange?: (ref: ImageDisplay) => void;
+	enableCenterOffset?: boolean;
 }
 
 interface ContainerDim {
@@ -42,8 +45,6 @@ function getBaseDim() {
 	};
 }
 
-const dim = Dimensions.get('window');
-
 export class ImageDisplay extends React.Component<
 	ImageDisplayProps,
 	ImageDisplayState
@@ -52,7 +53,7 @@ export class ImageDisplay extends React.Component<
 	_mounted = false;
 	_containerSetup = false;
 	_labelSetup = false;
-
+	_offsetEnabled = false;
 	constructor(props) {
 		super(props);
 		if (!this.props.imageID && !this.props.fullUri) {
@@ -60,6 +61,10 @@ export class ImageDisplay extends React.Component<
 			throw new Error(
 				'Loading component error: imageID or fullUri needed'
 			);
+		}
+
+		if (props.enableCenterOffset) {
+			this._offsetEnabled = true;
 		}
 
 		if (this.props.fullUri) {
@@ -108,7 +113,6 @@ export class ImageDisplay extends React.Component<
 					fullUri: this.props.fullUri,
 					loading: true
 				});
-				this.props.onLoadingEnd ? this.props.onLoadingEnd(this) : null;
 			}
 			await this.loadImage();
 		}
@@ -171,8 +175,9 @@ export class ImageDisplay extends React.Component<
 	}
 
 	async loadImage() {
-		const token = await getJWTToken();
+		this.props.onImageChange ? this.props.onImageChange(this) : null;
 
+		const token = await getJWTToken();
 		try {
 			const img = await getUnparsed(this.getUri(), token);
 
@@ -184,10 +189,11 @@ export class ImageDisplay extends React.Component<
 					loading: false,
 					imgRatio: ratio
 				});
+
 				this.props.onLoadingEnd ? this.props.onLoadingEnd(this) : null;
 			}
 		} catch (e) {
-			console.log(e);
+			console.warn(e);
 		}
 	}
 
@@ -252,19 +258,20 @@ export class ImageDisplay extends React.Component<
 		}
 	}
 
-	getTopOffsetCenter(): number {
-		if (!this._labelSetup || !this._containerSetup) {
+	getContainerOffset(): number {
+		if (
+			!this._offsetEnabled ||
+			!this._labelSetup ||
+			!this._containerSetup
+		) {
 			return null;
 		}
 
-		const container = this.getImgContainerSize();
-		const label = this.getImgLabelSize();
-		const img = this.getImgSize();
+		const img = this.getImgSize().height;
+		const cont = this.getImgContainerSize().height;
+		const label = this.getImgLabelSize().height;
 
-		return (
-			container.height / 2 -
-			(((label.height | 0) * 5) / 2 + img.height) / 2
-		);
+		return cont / 2 - (img + label) / 2;
 	}
 
 	render() {
@@ -279,13 +286,12 @@ export class ImageDisplay extends React.Component<
 							justifyContent: 'center',
 							backgroundColor: styleBase.neutralColor
 						}}>
-						<Text>Title</Text>
 						<Text
 							style={{
 								color: styleBase.textColor,
 								paddingTop: 5
 							}}>
-							Description of the image
+							{this.props.label}
 						</Text>
 					</View>
 				);
@@ -298,18 +304,29 @@ export class ImageDisplay extends React.Component<
 			return (
 				<View style={this.getImgContainerSize()}>
 					<View
-						style={{
-							borderRadius: 10,
-							overflow: 'hidden',
-							marginTop: this.getTopOffsetCenter()
-						}}>
+						style={
+							this.props.disableRadius
+								? null
+								: {
+										borderRadius: 10,
+										overflow: 'hidden'
+								  }
+						}>
 						<Image
 							source={{ uri: this.getImg() }}
 							style={[
 								{
-									resizeMode: 'contain'
+									resizeMode: 'contain',
+									marginTop: this.getContainerOffset()
 								},
-								this.getImgSize()
+								this.getImgSize(),
+								this.props.disableRadius
+									? null
+									: {
+											borderTopLeftRadius: 20,
+											borderTopRightRadius: 20,
+											overflow: 'hidden'
+									  }
 							]}
 							key={this.state.imageID}
 						/>

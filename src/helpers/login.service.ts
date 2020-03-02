@@ -75,7 +75,7 @@ export class LoginService {
 
 			overwriteNavigation(navigation, 'Unlogged');
 		} catch (error) {
-			console.log(error);
+			console.warn(error);
 		}
 	}
 }
