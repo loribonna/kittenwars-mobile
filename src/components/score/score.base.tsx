@@ -17,13 +17,15 @@ interface ScoreProps {
 interface ScoreState {
 	bestKittens: IKitten[];
 	worstKittens: IKitten[];
+	loading: boolean;
 	currentKitten: 'best' | 'worst';
 }
 
 const RenderKittens: React.FunctionComponent<{
 	kittens: IKitten[];
 	type: 'best' | 'worst';
-}> = ({ kittens, type }): JSX.Element => {
+	onLoadEnd: () => void;
+}> = ({ kittens, type, onLoadEnd }): JSX.Element => {
 	if (!kittens || !Array.isArray(kittens) || !kittens[0]) {
 		return null;
 	}
@@ -31,14 +33,15 @@ const RenderKittens: React.FunctionComponent<{
 		<View style={scoreStyle.scrollContainer}>
 			{Array.isArray(kittens) && kittens[0] && (
 				<View style={scoreStyle.imageContainer}>
-					<View style={scoreStyle.label}>
-						<Text>
-							{type === 'best' ? 'BEST' : 'WORST'} KITTEN WITH{' '}
-							{kittens[0].votes} VOTES
-						</Text>
-					</View>
-
 					<ImageDisplay
+						onLoadingEnd={() => {
+							onLoadEnd();
+						}}
+						label={(() => {
+							const m = type === 'best' ? 'BEST' : 'WORST';
+							return `${m} KITTEN WITH
+						${kittens[0].votes} VOTES`;
+						})()}
 						fullUri={`${BASE_URI}/score/${type}/${kittens[0].savedName}`}
 					/>
 				</View>
@@ -51,12 +54,14 @@ export abstract class ScoreBase extends React.Component<
 	ScoreProps,
 	ScoreState
 > {
+	_kittensLoaded = 0;
 	constructor(props) {
 		super(props);
 		this.state = {
 			bestKittens: [],
 			worstKittens: [],
-			currentKitten: 'best'
+			currentKitten: 'best',
+			loading: true
 		};
 	}
 
@@ -95,21 +100,34 @@ export abstract class ScoreBase extends React.Component<
 		}
 	}
 
+	onLoadEnd() {
+		this._kittensLoaded++;
+		if (this._kittensLoaded == 2) {
+			this.setState({
+				...this.state,
+				loading: false
+			});
+		}
+	}
+
 	render() {
 		return (
 			<Carousel
+				loading={this.state.loading}
 				style={scoreStyle.container}
 				onPageChange={this.scrollEnd.bind(this)}
 				data={[
 					{
 						kittens: this.state.bestKittens,
 						type: 'best',
-						key: 'best'
+						key: 'best',
+						onLoadEnd: this.onLoadEnd.bind(this)
 					},
 					{
 						kittens: this.state.worstKittens,
 						type: 'worst',
-						key: 'worst'
+						key: 'worst',
+						onLoadEnd: this.onLoadEnd.bind(this)
 					}
 				]}
 				itemRender={RenderKittens}
@@ -122,17 +140,16 @@ const dimensions = Dimensions.get('window');
 
 const scoreStyle = StyleSheet.create({
 	container: {
-		flex: 1
+		flex: 1,
+		backgroundColor: styleBase.primaryColor
 	},
 	scrollContainer: {
 		height: dimensions.height,
 		width: dimensions.width
 	},
 	imageContainer: {
-		flex: 1
-	},
-	label: {
-		alignItems: 'center',
-		justifyContent: 'center'
+		flex: 1,
+		height: dimensions.height,
+		width: dimensions.width
 	}
 });
