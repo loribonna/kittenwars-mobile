@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Kittens } from './src/screens/tabs/kittens/kittens';
@@ -7,7 +6,7 @@ import { User } from './src/screens/tabs/user/user';
 import { Score } from './src/screens/tabs/score/score';
 import { Login } from './src/screens/stack/login/login';
 import { UnloggedScreen } from './src/screens/stack/unlogged/unlogged';
-import { getJWTToken, logout, silentSignIn } from './src/helpers/helpers';
+import { getJWTToken } from './src/helpers/helpers';
 import { get } from './src/helpers/crud';
 import {
 	createStackNavigator,
@@ -15,7 +14,6 @@ import {
 } from '@react-navigation/stack';
 import { InsertKitten } from './src/screens/stack/insert/insert';
 import { BASE_URI } from './src/helpers/statics';
-import { styleBase } from './src/helpers/style.base';
 import {
 	HeaderButton,
 	HeaderTitle
@@ -112,10 +110,7 @@ export default class App extends React.Component<AppProps, AppState> {
 	}
 
 	redirectToLogin(navigation) {
-		console.log(this._loginService)
-		navigation.navigate('Login', {
-			loginService: new LoginService()
-		});
+		navigation.navigate('Login');
 	}
 
 	render() {
@@ -146,10 +141,12 @@ export default class App extends React.Component<AppProps, AppState> {
 
 					<Stack.Screen
 						name="Login"
-						component={Login}
 						options={{
 							headerTitle: () => <HeaderTitle title={'Login'} />
 						}}
+						children={({navigation}) => (
+							<Login navigation={navigation} loginService={this._loginService} />
+						)}
 					/>
 					<Stack.Screen
 						name="Logged"
@@ -161,7 +158,9 @@ export default class App extends React.Component<AppProps, AppState> {
 							headerRight: () => (
 								<HeaderButton
 									title="logout"
-									onPress={() => logout(navigation)}
+									onPress={() =>
+										this._loginService.logout(navigation)
+									}
 								/>
 							),
 							headerTitle: () => (
