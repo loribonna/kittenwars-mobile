@@ -1,15 +1,9 @@
-import { Pages } from './interfaces';
 import AsyncStorage from '@react-native-community/async-storage';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { get } from './crud';
 import { BASE_URI } from './statics';
 import { CommonActions } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../App';
 import {
-	GoogleSignin,
-	statusCodes,
-	User
+	GoogleSignin
 } from '@react-native-community/google-signin';
 
 export const getJWTToken = async () => {
@@ -21,7 +15,7 @@ export const setJWTToken = async (token: string) => {
 	await AsyncStorage.setItem('token', token);
 };
 
-const _removeJWTToken = async () => {
+export const removeJWTToken = async () => {
 	await AsyncStorage.removeItem('token');
 };
 
@@ -46,16 +40,4 @@ export const overwriteNavigation = (navigation: any, route: string) => {
 			routes: [{ name: route }]
 		})
 	);
-};
-
-export const logout = async (navigation: any) => {
-	try {
-		//await GoogleSignin.revokeAccess();
-		await _removeJWTToken();
-		await GoogleSignin.signOut();
-
-		overwriteNavigation(navigation, 'Unlogged');
-	} catch (error) {
-		console.log(error);
-	}
 };

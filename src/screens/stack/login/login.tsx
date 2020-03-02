@@ -13,14 +13,15 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
 import { CLIENT_ID } from 'react-native-dotenv';
 import { styleBase, alignCenter } from '../../../helpers/style.base';
+import { LoginService } from '../../../helpers/login.service';
 
 interface LoginProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Login'>;
+	loginService: LoginService;
 }
 
 interface LoginState {
 	isSigninInProgress: boolean;
-	googlePlayMissing: boolean;
 	error: boolean;
 }
 
@@ -29,80 +30,29 @@ export class Login extends React.Component<LoginProps, LoginState> {
 		super(props);
 		this.state = {
 			isSigninInProgress: false,
-			googlePlayMissing: false,
 			error: false
 		};
-	}
-
-	async componentDidMount() {
-		GoogleSignin.configure({
-			webClientId: CLIENT_ID,
-			offlineAccess: true,
-			hostedDomain: '',
-			forceConsentPrompt: false
-		});
-
-		await this.getCurrentUserInfo();
 	}
 
 	_redirectToLoggedArea() {
 		overwriteNavigation(this.props.navigation, 'Logged');
 	}
 
-	async finalizeAuth(userInfo: User) {
-		try {
-			const data: any = await post(
-				BASE_URI + '/auth/google/token?id_token=' + userInfo.idToken
-			);
-			await setJWTToken(data.jwt);
-
-			this._redirectToLoggedArea();
-		} catch (e) {
-			console.error(e);
-		}
-	}
-
-	async _signIn() {
+	async signIn() {
 		try {
 			this.setState({ ...this.state, isSigninInProgress: true });
-			if (await GoogleSignin.hasPlayServices()) {
-				const userInfo: User = await GoogleSignin.signIn();
-				await this.finalizeAuth(userInfo);
+			const signed = await this.props.loginService._signIn();
+
+			if (signed) {
+				this._redirectToLoggedArea();
 			} else {
-				this.setState({
-					...this.state,
-					googlePlayMissing: true,
-					isSigninInProgress: false
-				});
-				return;
+				this.setState({ ...this.state, isSigninInProgress: false });
 			}
 		} catch (error) {
 			// error.code = {SIGN_IN_CANCELLED|IN_PROGRESS|PLAY_SERVICES_NOT_AVAILABLE|...}
-			if (error.code == statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-				this.setState({ ...this.state, error: true });
-				return;
-			}
-			console.log(error);
-		} finally {
-			this.setState({ ...this.state, isSigninInProgress: false });
+			this.setState({ ...this.state, error: true });
+			console.warn(error);
 		}
-	}
-
-	async getCurrentUserInfo() {
-		this.setState({ ...this.state, isSigninInProgress: true });
-
-		try {
-			const userInfo = await GoogleSignin.signInSilently();
-			if (userInfo) {
-				await this.finalizeAuth(userInfo);
-			}
-		} catch (error) {
-			//error.code = {SIGN_IN_REQUIRED|...}
-			if (error.code == statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-				this.setState({ ...this.state, error: true });
-			}
-		}
-		this.setState({ ...this.state, isSigninInProgress: false });
 	}
 
 	render() {
@@ -126,15 +76,12 @@ export class Login extends React.Component<LoginProps, LoginState> {
 							style={{ width: '100%' }}
 							size={GoogleSigninButton.Size.Wide}
 							color={GoogleSigninButton.Color.Dark}
-							onPress={this._signIn.bind(this)}
+							onPress={this.signIn.bind(this)}
 							disabled={this.state.isSigninInProgress}
 						/>
 
 						{this.state.error && (
 							<Text>Google Play services unavaiable</Text>
-						)}
-						{this.state.googlePlayMissing && (
-							<Text>Need Google Play to access!</Text>
 						)}
 					</View>
 				</View>
