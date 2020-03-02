@@ -1,7 +1,13 @@
 import * as React from 'react';
 import { get } from '../../helpers/crud';
 import { IKitten } from '../../helpers/interfaces';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import {
+	View,
+	Text,
+	StyleSheet,
+	Dimensions,
+	LayoutRectangle
+} from 'react-native';
 import { ImageDisplay } from '../image/image';
 import { BASE_URI } from '../../helpers/statics';
 import { styleBase } from '../../helpers/style.base';
@@ -19,9 +25,12 @@ interface ScoreState {
 	worstKittens: IKitten[];
 	loading: boolean;
 	currentKitten: 'best' | 'worst';
+	viewHeight: number;
 }
 
-const RenderKittens: React.FunctionComponent<{
+const screenWidth = Dimensions.get('screen').width;
+
+const KittensRender: React.FunctionComponent<{
 	kittens: IKitten[];
 	type: 'best' | 'worst';
 	onLoadEnd: () => void;
@@ -30,17 +39,18 @@ const RenderKittens: React.FunctionComponent<{
 		return null;
 	}
 	return (
-		<View style={scoreStyle.scrollContainer}>
+		<View style={{ height: '100%', width: screenWidth }}>
 			{Array.isArray(kittens) && kittens[0] && (
-				<View style={scoreStyle.imageContainer}>
+				<View style={{ height: '100%', width: '100%' }}>
 					<ImageDisplay
+						enableCenterOffset={true}
 						onLoadingEnd={() => {
 							onLoadEnd();
 						}}
 						label={(() => {
 							const m = type === 'best' ? 'BEST' : 'WORST';
 							return `${m} KITTEN WITH
-						${kittens[0].votes} VOTES`;
+							${kittens[0].votes} VOTES`;
 						})()}
 						fullUri={`${BASE_URI}/score/${type}/${kittens[0].savedName}`}
 					/>
@@ -61,7 +71,8 @@ export abstract class ScoreBase extends React.Component<
 			bestKittens: [],
 			worstKittens: [],
 			currentKitten: 'best',
-			loading: true
+			loading: true,
+			viewHeight: null
 		};
 	}
 
@@ -110,46 +121,37 @@ export abstract class ScoreBase extends React.Component<
 		}
 	}
 
+	measureView(layout: LayoutRectangle) {
+		this.setState({
+			...this.state,
+			viewHeight: layout.height
+		});
+	}
+
 	render() {
 		return (
-			<Carousel
-				loading={this.state.loading}
-				style={scoreStyle.container}
-				onPageChange={this.scrollEnd.bind(this)}
-				data={[
-					{
-						kittens: this.state.bestKittens,
-						type: 'best',
-						key: 'best',
-						onLoadEnd: this.onLoadEnd.bind(this)
-					},
-					{
-						kittens: this.state.worstKittens,
-						type: 'worst',
-						key: 'worst',
-						onLoadEnd: this.onLoadEnd.bind(this)
-					}
-				]}
-				itemRender={RenderKittens}
-			/>
+			<View onLayout={e => this.measureView(e.nativeEvent.layout)}>
+				<Carousel
+					loading={this.state.loading}
+					style={{ backgroundColor: styleBase.primaryColor }}
+					onPageChange={this.scrollEnd.bind(this)}
+					data={[
+						{
+							kittens: this.state.bestKittens,
+							type: 'best',
+							key: 'best',
+							onLoadEnd: this.onLoadEnd.bind(this)
+						},
+						{
+							kittens: this.state.worstKittens,
+							type: 'worst',
+							key: 'worst',
+							onLoadEnd: this.onLoadEnd.bind(this)
+						}
+					]}
+					itemRender={KittensRender}
+				/>
+			</View>
 		);
 	}
 }
-
-const dimensions = Dimensions.get('window');
-
-const scoreStyle = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: styleBase.primaryColor
-	},
-	scrollContainer: {
-		height: dimensions.height,
-		width: dimensions.width
-	},
-	imageContainer: {
-		flex: 1,
-		height: dimensions.height,
-		width: dimensions.width
-	}
-});

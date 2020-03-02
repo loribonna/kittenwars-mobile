@@ -27,7 +27,7 @@ export const checkJWTToken = async (token: string): Promise<boolean> => {
 		}
 	} catch (e) {
 		if (e.status != 401) {
-			console.log(e);
+			console.warn(e);
 		}
 	}
 	return false;

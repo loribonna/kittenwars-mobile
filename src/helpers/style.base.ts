@@ -15,3 +15,12 @@ export const alignCenter = StyleSheet.create({
 		alignItems: 'center'
 	}
 }).center;
+
+
+export const textStyle = StyleSheet.create({
+	text:{
+		color:styleBase.textColor,
+		fontWeight:"300",
+		fontSize:20
+	}
+}).text;

@@ -4,8 +4,16 @@ import { get, put } from '../../../helpers/crud';
 import { VOTE_URI } from '../../../helpers/statics';
 import { IKitten } from '../../../helpers/interfaces';
 import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
-import { View, Text, Dimensions } from 'react-native';
+import {
+	View,
+	Text,
+	Dimensions,
+	StyleSheet,
+	LayoutRectangle
+} from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Loading } from '../../../components/loading/loading';
+import { styleBase, textStyle } from '../../../helpers/style.base';
 
 interface KittensProps extends BottomTabBarProps {}
 
@@ -13,16 +21,25 @@ interface KittensState {
 	leftKitten?: IKitten;
 	rightKitten?: IKitten;
 	win?: boolean;
-	loading: boolean;
 	empty: boolean;
+	loading: boolean;
+	viewSize?: LayoutRectangle;
+	showScore: boolean;
 }
+
+const SCORE_TIMEOUT = 500;
 
 export class Kittens extends React.Component<KittensProps, KittensState> {
 	_mounted = false;
 	_disableClick = false;
+	_loadingRef: Loading;
 	constructor(props) {
 		super(props);
-		this.state = { loading: false, empty: false };
+		this.state = {
+			loading: true,
+			empty: false,
+			showScore: false
+		};
 	}
 
 	async componentDidMount() {
@@ -35,8 +52,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 	}
 
 	async loadRandomKittens() {
-		let newState = { loading: false };
-		this.setState({ ...this.state, loading: true });
+		let newState = {};
 		try {
 			const token = await getJWTToken();
 
@@ -64,6 +80,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 
 	async voteKitten(kittenSavedName: String) {
 		this._disableClick = true;
+
 		if (!this.state.leftKitten || !this.state.rightKitten) {
 			console.error(
 				'Kitten vote error: kitten ' +
@@ -87,10 +104,11 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 			const token = await getJWTToken();
 
 			const win: boolean = await put(VOTE_URI, vote, token);
+			this.setState({ ...this.state, win: win });
+
+			this.scoreTimeout();
 			await this.loadRandomKittens();
 			this._disableClick = false;
-
-			this.setState({ ...this.state, win: win });
 		} catch (e) {
 			if (e.status === 401) {
 				overwriteNavigation(this.props.navigation, 'Unlogged');
@@ -98,17 +116,96 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 		}
 	}
 
+	measureView(layout: LayoutRectangle) {
+		this.setState({
+			...this.state,
+			viewSize: layout
+		});
+	}
+
+	onLoadStart() {
+		this.setState({
+			...this.state,
+			loading: true
+		});
+	}
+
+	onLoadEnd() {
+		this.setState({
+			...this.state,
+			loading: false
+		});
+	}
+
+	onKittenImageChangeEnd() {
+		this._loadingRef.onFeatureChangeEnd();
+	}
+
+	onKittenImageChangeStart() {
+		this._loadingRef.onFeatureChangeStart();
+	}
+
+	scoreTimeout() {
+		this.setState({ ...this.state, showScore: true });
+		setTimeout(() => {
+			this.setState({ ...this.state, showScore: false });
+		}, SCORE_TIMEOUT);
+	}
+
 	render() {
+		const height = this.state.viewSize ? this.state.viewSize.height : 0;
+
 		return (
-			<View>
-				{this.state.loading && <Text>Loading random kittens...</Text>}
+			<View
+				onLayout={e => this.measureView(e.nativeEvent.layout)}
+				style={{ flex: 1 }}>
+				<Loading
+					featuresNumber={2}
+					getRef={ref => (this._loadingRef = ref)}
+				/>
+				{this.state.showScore && (
+					<View
+						style={{
+							position: 'absolute',
+							zIndex: 1000,
+							height: height,
+							width: '100%',
+							justifyContent: 'center',
+							alignItems: 'center',
+							backgroundColor: styleBase.primaryColor
+						}}>
+						{this.state.win && (
+							<Text style={[textStyle, { color: 'white' }]}>
+								You WON!
+							</Text>
+						)}
+						{!this.state.win && (
+							<Text style={[textStyle, { color: 'white' }]}>
+								You Lose :(
+							</Text>
+						)}
+					</View>
+				)}
 				{!this.state.loading && this.state.empty && (
 					<Text>No kittens to load - INSERT KITTEN</Text>
 				)}
-				<View style={{ height: '100%' }}>
+				<View
+					style={{
+						flex: 1
+					}}>
 					{this.state.leftKitten && (
-						<View style={{ height: '50%', width: null }}>
+						<View
+							style={{
+								height: height / 2
+							}}>
 							<ImageDisplay
+								onImageChange={() =>
+									this.onKittenImageChangeStart()
+								}
+								onLoadingEnd={() =>
+									this.onKittenImageChangeEnd()
+								}
+								disableRadius={true}
 								key={this.state.leftKitten.savedName}
 								imageID={this.state.leftKitten.savedName}
 								onClick={this.voteKitten.bind(
@@ -117,8 +214,18 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 						</View>
 					)}
 					{this.state.rightKitten && (
-						<View style={{ height: '50%', width: null }}>
+						<View
+							style={{
+								height: height / 2
+							}}>
 							<ImageDisplay
+								onImageChange={() =>
+									this.onKittenImageChangeStart()
+								}
+								onLoadingEnd={() =>
+									this.onKittenImageChangeEnd()
+								}
+								disableRadius={true}
 								key={this.state.rightKitten.savedName}
 								imageID={this.state.rightKitten.savedName}
 								onClick={this.voteKitten.bind(
@@ -127,9 +234,6 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 						</View>
 					)}
 				</View>
-
-				{this.state.win != null && this.state.win && <Text>WIN</Text>}
-				{this.state.win != null && !this.state.win && <Text>LOSE</Text>}
 			</View>
 		);
 	}

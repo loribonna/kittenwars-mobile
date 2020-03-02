@@ -74,9 +74,7 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
 	render() {
 		return (
 			<View>
-				{this.props.loading && (
-					<Loading />
-				)}
+				{this.props.loading && <Loading manual={true} />}
 				<FlatList
 					horizontal={true}
 					pagingEnabled={true}

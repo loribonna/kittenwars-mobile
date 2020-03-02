@@ -6,7 +6,7 @@ import { User } from './src/screens/tabs/user/user';
 import { Score } from './src/screens/tabs/score/score';
 import { Login } from './src/screens/stack/login/login';
 import { UnloggedScreen } from './src/screens/stack/unlogged/unlogged';
-import { getJWTToken } from './src/helpers/helpers';
+import { getJWTToken, overwriteNavigation } from './src/helpers/helpers';
 import { get } from './src/helpers/crud';
 import {
 	createStackNavigator,
@@ -86,7 +86,7 @@ export default class App extends React.Component<AppProps, AppState> {
 		const signed = await this._loginService.setup();
 
 		if (signed && this._navigationRef) {
-			this._navigationRef.navigate('Logged');
+			overwriteNavigation(this._navigationRef, "Logged");
 		}
 	}
 
@@ -99,7 +99,7 @@ export default class App extends React.Component<AppProps, AppState> {
 				return true;
 			}
 		} catch (e) {
-			console.log(e);
+			console.warn(e);
 		}
 
 		return false;
