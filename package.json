@@ -8,9 +8,9 @@
 		"link": "react-native link",
 		"test": "jest",
 		"android:release": "react-native run-android --variant=release",
-		"android:bundle": " react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
+		"android:bundle": "cd android && react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
 		"android:release:nobundle": "./gradlew assembleRelease -x bundleReleaseJsAndAssets",
-		"android:clean":"./gradlew clean app:assembleRelease -x bundleReleaseJsAndAssets"
+		"android:clean": "./gradlew clean app:assembleRelease -x bundleReleaseJsAndAssets"
 	},
 	"dependencies": {
 		"@expo/vector-icons": "^10.0.6",
@@ -39,6 +39,7 @@
 		"@types/react-native": "~0.60.23",
 		"babel-preset-expo": "~8.0.0",
 		"jest-expo": "~36.0.1",
+		"react-native-dotenv": "^0.2.0",
 		"typescript": "~3.6.3"
 	},
 	"jest": {

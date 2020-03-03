@@ -21,24 +21,3 @@ export interface IUser {
 	score: Number;
 	isAdmin: Boolean;
 }
-
-export enum Pages {
-	'score' = "Score",
-	'kittens' = "Kittens",
-	'user' = 'User',
-	'login' = 'Login',
-	'logout' = 'Logout',
-	'jwt' = 'JWT'
-}
-
-export const UnloggedPages = [
-	Pages.login,
-	Pages.score,
-	Pages.jwt
-]
-
-export const LoggedPages = [
-	Pages.kittens,
-	Pages.user,
-	Pages.logout
-]
