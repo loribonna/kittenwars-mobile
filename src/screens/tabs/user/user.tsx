@@ -193,12 +193,12 @@ export class User extends React.Component<UserProps, UserState> {
 		);
 
 		const ScoreBoard = (
-			<View style={[alignCenter, { height: '100%' }]}>
+			<View style={[alignCenter, { height: '100%', marginLeft:10,marginRight:10 }]}>
 				<Border
 					style={[
 						alignCenter,
 						{
-							width: '90%',
+							width: '100%',
 							backgroundColor: styleBase.neutralColor,
 							borderRadius: 10,
 							marginBottom: 10

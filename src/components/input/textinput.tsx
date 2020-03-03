@@ -6,10 +6,14 @@ import {
 	NativeEventSubscription,
 	Keyboard,
 	NativeSyntheticEvent,
-	TextInputKeyPressEventData
+	TextInputKeyPressEventData,
+	StyleProp,
+	ViewStyle
 } from 'react-native';
 import { SubjectData } from '../../helpers/types';
 import { TextInput } from 'react-native-gesture-handler';
+import { styleBase } from '../../helpers/style.base';
+import { Border } from '../border/border';
 
 interface TextInputProps {
 	label?: string;
@@ -21,6 +25,7 @@ interface TextInputProps {
 	onTextChange?: (data: SubjectData) => void;
 	onEditingStart?: () => void;
 	onEditingEnd?: () => void;
+	style?:StyleProp<ViewStyle>
 }
 
 interface TextInputState {
@@ -32,10 +37,9 @@ const style = StyleSheet.create({
 	textInput: {
 		alignSelf: 'center',
 		justifyContent: 'center',
+		overflow:"hidden",
 		borderRadius: 30,
-		borderWidth: 2,
-		borderColor: 'lightblue',
-		width: '80%'
+		borderWidth: 2
 	}
 });
 
@@ -114,7 +118,7 @@ export class CustomTextInput extends React.Component<
 
 	render() {
 		return (
-			<View style={style.textInput}>
+			<Border style={[style.textInput, this.props.style]}>
 				{this.props.label && (
 					<Text style={{ paddingRight: 2 }}>{this.props.label}</Text>
 				)}
@@ -129,7 +133,7 @@ export class CustomTextInput extends React.Component<
 					value={this.state.value}
 					onChangeText={text => this.handleTextChange(text)}
 				/>
-			</View>
+			</Border>
 		);
 	}
 }

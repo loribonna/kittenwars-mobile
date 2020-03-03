@@ -6,13 +6,23 @@ import { Button, StyleProp, ViewStyle } from 'react-native';
 export const CustomButton: React.FunctionComponent<{
 	onPress: () => void;
 	title: string;
+	disabled?: boolean;
+	disabledColor?: string;
 	style?: StyleProp<ViewStyle>;
-}> = ({ onPress, title, style }) => {
+}> = ({ onPress, title, disabled, disabledColor, style }) => {
 	return (
-		<Border style={[{ overflow: 'hidden', borderRadius:7 }, style]} width={1.5}>
+		<Border
+			style={[{ overflow: 'hidden', borderRadius: 7 }, style]}
+			width={1.5}>
 			<Button
-				color={styleBase.primaryColor}
-				onPress={() => onPress()}
+				color={
+					disabled
+						? disabledColor
+							? disabledColor
+							: styleBase.neutralColor
+						: styleBase.primaryColor
+				}
+				onPress={() => (!disabled ? onPress() : null)}
 				title={title}
 			/>
 		</Border>

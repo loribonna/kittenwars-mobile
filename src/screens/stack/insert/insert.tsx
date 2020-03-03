@@ -20,6 +20,10 @@ import { BASE_URI } from '../../../helpers/statics';
 import { postFile } from '../../../helpers/crud';
 import { getJWTToken } from '../../../helpers/helpers';
 import { CustomTextInput } from '../../../components/input/textinput';
+import { ImageDisplay } from '../../../components/image/image';
+import { CustomButton } from '../../../components/button/button';
+import { alignCenter } from '../../../helpers/style.base';
+import { Border } from '../../../components/border/border';
 
 const MAX_IMAGE_SIZE = 16 * 1024 * 1024 - 1; // 16 MB
 
@@ -66,8 +70,10 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 	}
 
 	async takePicture() {
-		const options = {
-			title: 'Take a photo of a kitten!',
+		const options: ImagePickerOptions = {
+			title: 'Get the photo of your kitten!',
+			chooseFromLibraryButtonTitle: 'Choose Kitten from library!',
+			takePhotoButtonTitle: 'Take a photo...',
 			storageOptions: {
 				skipBackup: true,
 				path: 'images'
@@ -157,15 +163,20 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 
 	render() {
 		return (
-			<View
-				style={{
-					flex: 1,
+			<ScrollView
+				contentContainerStyle={{
 					alignItems: 'center',
-					height: '100%'
+					height: '100%',
+					width: '100%'
 				}}>
 				<View
-					style={{ height: '18%', paddingTop: '1%', width: '100%' }}>
+					style={{
+						height: '18%',
+						paddingTop: '1%',
+						width: '80%'
+					}}>
 					<CustomTextInput
+						style={{ width: '100%' }}
 						name="name"
 						value={this.state.kittenInfo.name?.toString()}
 						maxlen={40}
@@ -177,6 +188,7 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 
 					<View style={{ paddingTop: '1%' }} />
 					<CustomTextInput
+						style={{ width: '100%' }}
 						name="age"
 						type="number"
 						value={this.state.kittenInfo.age?.toString()}
@@ -187,17 +199,17 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 						onTextChange={data => this.updateData(data)}
 					/>
 				</View>
-
 				{!this.state.editing && (
 					<View
 						style={{
 							height: '60%',
-							width: '100%',
+							width: '80%',
 							paddingTop: this.state.image ? '8%' : '1%'
 						}}>
 						{this.state.image && (
 							<Image
 								style={{
+									borderRadius: 20,
 									height: '100%',
 									width: null,
 									resizeMode: 'contain'
@@ -205,15 +217,24 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 								source={{ uri: this.state.image.uri }}
 							/>
 						)}
-						<View style={{ paddingTop: '5%' }}>
-							<Button
-								disabled={this.state.loading}
-								onPress={this.takePicture.bind(this)}
+						<View
+							style={{
+								marginTop: '4%',
+								alignItems: 'center',
+								width: '100%'
+							}}>
+							<CustomButton
+								style={{
+									alignSelf: 'center',
+									width: '100%',
+									borderRadius: 30
+								}}
 								title={
 									this.state.image
 										? 'Change picture'
 										: 'Take picture'
 								}
+								onPress={this.takePicture.bind(this)}
 							/>
 						</View>
 					</View>
@@ -225,23 +246,14 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 							position: 'absolute',
 							bottom: 0
 						}}>
-						{this.state.confirmable && (
-							<View
-								style={{
-									justifyContent: 'center',
-									alignItems: 'center',
-									bottom: 0
-								}}>
-								<Button
-									disabled={this.state.loading}
-									onPress={this.insertKitten.bind(this)}
-									title="Confirm"
-								/>
-							</View>
-						)}
+						<CustomButton
+							disabled={!this.state.confirmable}
+							title="Confirm"
+							onPress={this.insertKitten.bind(this)}
+						/>
 					</View>
 				)}
-			</View>
+			</ScrollView>
 		);
 	}
 }

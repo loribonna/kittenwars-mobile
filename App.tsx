@@ -44,7 +44,7 @@ const LoggedScreen: React.FunctionComponent<{
 			<Tab.Screen
 				options={{
 					tabBarLabel: () => (
-						<HeaderTitle fontSize={15} title="Kittens" />
+						<HeaderTitle fontSize={15} title="War!" />
 					)
 				}}
 				name="Kittens"

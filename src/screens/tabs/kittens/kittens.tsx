@@ -175,7 +175,6 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 			<View
 				style={{
 					flex: 1,
-					backgroundColor: mainBackgroundColor
 				}}>
 				<View
 					onLayout={e => this.measureView(e.nativeEvent.layout)}
