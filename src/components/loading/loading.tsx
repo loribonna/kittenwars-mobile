@@ -6,9 +6,10 @@ interface LoadingInterface {
 	width?: number;
 	featuresNumber?: number;
 	manual?: boolean;
-	getRef?: (ref: Loading) => void;
+	getRef: (ref: Loading) => void;
 	onLoadEnd?: () => void;
 	onLoadStart?: () => void;
+	text?: string;
 }
 
 interface LoadingState {
@@ -17,7 +18,7 @@ interface LoadingState {
 
 export class Loading extends React.Component<LoadingInterface, LoadingState> {
 	private _width = Dimensions.get('window').width;
-	private _nFeatures = 2;
+	private _nFeatures = 1;
 	private _cFeatures = 0;
 	constructor(props) {
 		super(props);
@@ -73,7 +74,7 @@ export class Loading extends React.Component<LoadingInterface, LoadingState> {
 					style.container
 				]}>
 				<Text style={{ fontSize: this._width / 10, color: 'white' }}>
-					LOADING..
+					{this.props.text || 'LOADING..'}
 				</Text>
 			</View>
 		);
@@ -92,7 +93,7 @@ export class Loading extends React.Component<LoadingInterface, LoadingState> {
 
 const style = StyleSheet.create({
 	container: {
-		height: "100%",
-		width: "100%"
+		height: '100%',
+		width: '100%'
 	}
 });

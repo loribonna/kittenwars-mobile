@@ -7,7 +7,9 @@ import {
 	Dimensions,
 	FlatList,
 	ViewToken,
-	Text
+	Text,
+	ViewStyle,
+	StyleProp
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { IKitten } from '../../helpers/interfaces';
@@ -17,7 +19,7 @@ import { Loading } from '../loading/loading';
 export type Direction = 'next' | 'previous';
 
 interface CarouselProps {
-	style: object;
+	style: StyleProp<ViewStyle>;
 	onPageChange?: (key: any) => void;
 	data: any[];
 	itemRender: (item: any) => JSX.Element;
@@ -26,31 +28,13 @@ interface CarouselProps {
 
 interface CarouselState {
 	currentItemKey?: any;
-	loading: boolean;
 }
-
-const style = StyleSheet.create({
-	container: {
-		flex: 1
-	}
-});
-
-const screenWidth = Dimensions.get('window').width;
 
 export class Carousel extends React.Component<CarouselProps, CarouselState> {
 	constructor(props) {
 		super(props);
 		this._handlePageChange = this._handlePageChange.bind(this);
-		this.state = { loading: props.loading || false };
-	}
-
-	componentDidUpdate() {
-		if (this.props.loading != this.state.loading) {
-			this.setState({
-				...this.state,
-				loading: this.props.loading
-			});
-		}
+		this.state = {};
 	}
 
 	_handlePageChange(data: {
@@ -73,8 +57,7 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
 
 	render() {
 		return (
-			<View>
-				{this.props.loading && <Loading manual={true} />}
+			<View style={this.props.style}>
 				<FlatList
 					horizontal={true}
 					pagingEnabled={true}
