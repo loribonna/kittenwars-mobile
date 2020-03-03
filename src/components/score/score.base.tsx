@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { ImageDisplay } from '../image/image';
 import { BASE_URI } from '../../helpers/statics';
-import { styleBase } from '../../helpers/style.base';
+import { styleBase, mainBackgroundColor } from '../../helpers/style.base';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Carousel, Direction } from '../carousel/carousel';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../App';
+import { Loading } from '../loading/loading';
 
 interface ScoreProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Unlogged'>;
@@ -30,11 +31,20 @@ interface ScoreState {
 
 const screenWidth = Dimensions.get('screen').width;
 
-const KittensRender: React.FunctionComponent<{
+interface KittensRenderProps {
 	kittens: IKitten[];
 	type: 'best' | 'worst';
 	onLoadEnd: () => void;
-}> = ({ kittens, type, onLoadEnd }): JSX.Element => {
+	onLoadStart: () => void;
+	key?: any;
+}
+
+const KittensRender: React.FunctionComponent<KittensRenderProps> = ({
+	kittens,
+	type,
+	onLoadEnd,
+	onLoadStart
+}): JSX.Element => {
 	if (!kittens || !Array.isArray(kittens) || !kittens[0]) {
 		return null;
 	}
@@ -47,10 +57,12 @@ const KittensRender: React.FunctionComponent<{
 						onLoadingEnd={() => {
 							onLoadEnd();
 						}}
+						onLoadingStart={() => {
+							onLoadStart();
+						}}
 						label={(() => {
 							const m = type === 'best' ? 'BEST' : 'WORST';
-							return `${m} KITTEN WITH
-							${kittens[0].votes} VOTES`;
+							return `${m} KITTEN WITH ${kittens[0].votes} VOTES`;
 						})()}
 						fullUri={`${BASE_URI}/score/${type}/${kittens[0].savedName}`}
 					/>
@@ -64,7 +76,7 @@ export abstract class ScoreBase extends React.Component<
 	ScoreProps,
 	ScoreState
 > {
-	_kittensLoaded = 0;
+	_loadingRef: Loading;
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -86,7 +98,7 @@ export abstract class ScoreBase extends React.Component<
 			const kittens = await get(BASE_URI + '/score/best');
 			this.setState({ ...this.state, bestKittens: kittens });
 		} catch (e) {
-			console.log(e);
+			console.warn(e);
 		}
 	}
 
@@ -95,7 +107,7 @@ export abstract class ScoreBase extends React.Component<
 			const kittens = await get(BASE_URI + '/score/worst');
 			this.setState({ ...this.state, worstKittens: kittens });
 		} catch (e) {
-			console.log(e);
+			console.warn(e);
 		}
 	}
 
@@ -111,14 +123,12 @@ export abstract class ScoreBase extends React.Component<
 		}
 	}
 
-	onLoadEnd() {
-		this._kittensLoaded++;
-		if (this._kittensLoaded == 2) {
-			this.setState({
-				...this.state,
-				loading: false
-			});
-		}
+	onKittenImageChangeEnd() {
+		this._loadingRef.onFeatureChangeEnd();
+	}
+
+	onKittenImageChangeStart() {
+		this._loadingRef.onFeatureChangeStart();
 	}
 
 	measureView(layout: LayoutRectangle) {
@@ -131,24 +141,40 @@ export abstract class ScoreBase extends React.Component<
 	render() {
 		return (
 			<View onLayout={e => this.measureView(e.nativeEvent.layout)}>
+				<Loading
+					featuresNumber={2}
+					getRef={ref => (this._loadingRef = ref)}
+				/>
 				<Carousel
 					loading={this.state.loading}
-					style={{ backgroundColor: styleBase.primaryColor }}
+					style={{ backgroundColor: mainBackgroundColor }}
 					onPageChange={this.scrollEnd.bind(this)}
-					data={[
-						{
-							kittens: this.state.bestKittens,
-							type: 'best',
-							key: 'best',
-							onLoadEnd: this.onLoadEnd.bind(this)
-						},
-						{
-							kittens: this.state.worstKittens,
-							type: 'worst',
-							key: 'worst',
-							onLoadEnd: this.onLoadEnd.bind(this)
-						}
-					]}
+					data={
+						[
+							{
+								kittens: this.state.bestKittens,
+								type: 'best',
+								key: 'best',
+								onLoadEnd: this.onKittenImageChangeEnd.bind(
+									this
+								),
+								onLoadStart: this.onKittenImageChangeStart.bind(
+									this
+								)
+							},
+							{
+								kittens: this.state.worstKittens,
+								type: 'worst',
+								key: 'worst',
+								onLoadStart: this.onKittenImageChangeStart.bind(
+									this
+								),
+								onLoadEnd: this.onKittenImageChangeEnd.bind(
+									this
+								)
+							}
+						] as KittensRenderProps[]
+					}
 					itemRender={KittensRender}
 				/>
 			</View>

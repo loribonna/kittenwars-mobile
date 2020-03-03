@@ -11,6 +11,7 @@ import {
 	LayoutRectangle
 } from 'react-native';
 import { styleBase } from '../../helpers/style.base';
+import { Border } from '../border/border';
 
 interface ImageDisplayProps {
 	imageID?: string;
@@ -19,7 +20,7 @@ interface ImageDisplayProps {
 	label?: string;
 	onLoadingEnd?: (ref: ImageDisplay) => void;
 	disableRadius?: boolean;
-	onImageChange?: (ref: ImageDisplay) => void;
+	onLoadingStart?: (ref: ImageDisplay) => void;
 	enableCenterOffset?: boolean;
 }
 
@@ -175,7 +176,7 @@ export class ImageDisplay extends React.Component<
 	}
 
 	async loadImage() {
-		this.props.onImageChange ? this.props.onImageChange(this) : null;
+		this.props.onLoadingStart ? this.props.onLoadingStart(this) : null;
 
 		const token = await getJWTToken();
 		try {
@@ -303,42 +304,40 @@ export class ImageDisplay extends React.Component<
 		const imageDisplay: () => JSX.Element = () => {
 			return (
 				<View style={this.getImgContainerSize()}>
-					<View
-						style={
+					<Border
+						width={2}
+						style={[
 							this.props.disableRadius
 								? null
 								: {
 										borderRadius: 10,
 										overflow: 'hidden'
-								  }
-						}>
+								  },
+							{
+								marginTop: this.getContainerOffset()
+							}
+						]}>
 						<Image
 							source={{ uri: this.getImg() }}
 							style={[
 								{
-									resizeMode: 'contain',
-									marginTop: this.getContainerOffset()
+									resizeMode: 'contain'
 								},
-								this.getImgSize(),
-								this.props.disableRadius
-									? null
-									: {
-											borderTopLeftRadius: 20,
-											borderTopRightRadius: 20,
-											overflow: 'hidden'
-									  }
+								this.getImgSize()
 							]}
 							key={this.state.imageID}
 						/>
 						{labelDisplay()}
-					</View>
+					</Border>
 				</View>
 			);
 		};
 
 		return (
 			<View
-				style={{ flex: 1 }}
+				style={{
+					flex: 1
+				}}
 				onLayout={event => this.measureView(event.nativeEvent.layout)}>
 				{this.props.onClick && (
 					<TouchableHighlight onPress={this.imageClick.bind(this)}>

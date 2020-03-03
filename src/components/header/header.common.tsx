@@ -1,19 +1,19 @@
 import React from 'react';
 import { Button, View, Text, StyleSheet } from 'react-native';
 import { styleBase } from '../../helpers/style.base';
+import { Border } from '../border/border';
+import { CustomButton } from '../button/button';
 
 export const HeaderButton: React.FunctionComponent<{
 	onPress: Function;
 	title: string;
 }> = ({ onPress, title }) => {
 	return (
-		<View style={{ paddingRight: 10 }}>
-			<Button
-				color={styleBase.primaryColor}
-				onPress={() => onPress()}
-				title={title}
-			/>
-		</View>
+		<CustomButton
+			style={{ marginRight: 10, borderRadius: 5 }}
+			title={title}
+			onPress={() => onPress()}
+		/>
 	);
 };
 

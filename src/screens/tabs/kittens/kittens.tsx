@@ -13,7 +13,12 @@ import {
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Loading } from '../../../components/loading/loading';
-import { styleBase, textStyle } from '../../../helpers/style.base';
+import {
+	styleBase,
+	textStyle,
+	mainBackgroundColor
+} from '../../../helpers/style.base';
+import { Border } from '../../../components/border/border';
 
 interface KittensProps extends BottomTabBarProps {}
 
@@ -153,53 +158,68 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 	}
 
 	render() {
-		const height = this.state.viewSize ? this.state.viewSize.height : 0;
+		const borderWidth = 10;
+		const height = this.state.viewSize
+			? this.state.viewSize.height - borderWidth
+			: 0;
+
+		const style = StyleSheet.create({
+			imageContainer: {
+				height: height / 2,
+				borderRadius: 10,
+				overflow: 'hidden'
+			}
+		});
 
 		return (
 			<View
-				onLayout={e => this.measureView(e.nativeEvent.layout)}
-				style={{ flex: 1 }}>
-				<Loading
-					featuresNumber={2}
-					getRef={ref => (this._loadingRef = ref)}
-				/>
-				{this.state.showScore && (
-					<View
-						style={{
-							position: 'absolute',
-							zIndex: 1000,
-							height: height,
-							width: '100%',
-							justifyContent: 'center',
-							alignItems: 'center',
-							backgroundColor: styleBase.primaryColor
-						}}>
-						{this.state.win && (
-							<Text style={[textStyle, { color: 'white' }]}>
-								You WON!
-							</Text>
-						)}
-						{!this.state.win && (
-							<Text style={[textStyle, { color: 'white' }]}>
-								You Lose :(
-							</Text>
-						)}
-					</View>
-				)}
-				{!this.state.loading && this.state.empty && (
-					<Text>No kittens to load - INSERT KITTEN</Text>
-				)}
+				style={{
+					flex: 1,
+					backgroundColor: mainBackgroundColor
+				}}>
 				<View
+					onLayout={e => this.measureView(e.nativeEvent.layout)}
 					style={{
-						flex: 1
+						flex: 1,
+						borderRadius: 15,
+						overflow: 'hidden',
+						borderWidth: 5,
+						borderColor: 'transparent'
 					}}>
-					{this.state.leftKitten && (
+					<Loading
+						featuresNumber={2}
+						getRef={ref => (this._loadingRef = ref)}
+					/>
+					{this.state.showScore && (
 						<View
 							style={{
-								height: height / 2
+								position: 'absolute',
+								zIndex: 1000,
+								height: height,
+								width: '100%',
+								justifyContent: 'center',
+								alignItems: 'center'
 							}}>
+							{this.state.win && (
+								<Text style={[textStyle, { color: 'white' }]}>
+									You WON!
+								</Text>
+							)}
+							{!this.state.win && (
+								<Text style={[textStyle, { color: 'white' }]}>
+									You Lose :(
+								</Text>
+							)}
+						</View>
+					)}
+					{!this.state.loading && this.state.empty && (
+						<Text>No kittens to load - INSERT KITTEN</Text>
+					)}
+
+					{this.state.leftKitten && (
+						<Border style={style.imageContainer}>
 							<ImageDisplay
-								onImageChange={() =>
+								onLoadingStart={() =>
 									this.onKittenImageChangeStart()
 								}
 								onLoadingEnd={() =>
@@ -208,18 +228,15 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 								disableRadius={true}
 								key={this.state.leftKitten.savedName}
 								imageID={this.state.leftKitten.savedName}
-								onClick={this.voteKitten.bind(
-									this
-								)}></ImageDisplay>
-						</View>
+								onClick={this.voteKitten.bind(this)}
+							/>
+						</Border>
 					)}
+					<View style={{ height: 1, width: '100%' }} />
 					{this.state.rightKitten && (
-						<View
-							style={{
-								height: height / 2
-							}}>
+						<Border style={style.imageContainer}>
 							<ImageDisplay
-								onImageChange={() =>
+								onLoadingStart={() =>
 									this.onKittenImageChangeStart()
 								}
 								onLoadingEnd={() =>
@@ -228,10 +245,9 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 								disableRadius={true}
 								key={this.state.rightKitten.savedName}
 								imageID={this.state.rightKitten.savedName}
-								onClick={this.voteKitten.bind(
-									this
-								)}></ImageDisplay>
-						</View>
+								onClick={this.voteKitten.bind(this)}
+							/>
+						</Border>
 					)}
 				</View>
 			</View>
