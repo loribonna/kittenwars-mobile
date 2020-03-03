@@ -57,3 +57,5 @@ buck-out/
 
 # Environment
 .prettierrc
+
+.env
