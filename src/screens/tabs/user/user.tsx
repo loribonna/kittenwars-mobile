@@ -1,11 +1,22 @@
 import * as React from 'react';
 import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
-import { get, post } from '../../../helpers/crud';
+import { get } from '../../../helpers/crud';
 import { IUser } from '../../../helpers/interfaces';
-import { View, Text, FlatList, Button, Image, ScrollView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { BASE_URI } from '../../../helpers/statics';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
+import {
+	styleBase,
+	alignCenter,
+	textStyle,
+	clearTextStyle,
+	darkTextStyle
+} from '../../../helpers/style.base';
+import { CircleBox } from '../../../components/circleBox/circleBox';
+import { Loading } from '../../../components/loading/loading';
+import { CustomButton } from '../../../components/button/button';
+import { Border } from '../../../components/border/border';
 
 interface UserProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Logged'>;
@@ -15,9 +26,6 @@ interface UserState {
 	userScore: Number;
 	scoreBoard: IUser[];
 	userPosition: Number;
-	fileUpl?: File;
-	fileOk?: boolean;
-	loading: boolean;
 }
 
 interface UserElementProp {
@@ -29,36 +37,60 @@ const UserElement: React.FunctionComponent<UserElementProp> = ({
 	user,
 	index
 }) => {
-	const color = index % 2 ? 'lightblue' : 'cyan';
+	const color =
+		index % 2
+			? styleBase.getPrimaryColorWithOpacity(0.8)
+			: styleBase.getSecondaryColorWithOpacity(0.8);
 	return (
-		<View style={{ paddingLeft: 20, backgroundColor: color }}>
-			<Text>Username: {user.username}</Text>
-			<Text>Score: {user.score}</Text>
+		<View
+			style={{
+				paddingLeft: 10,
+				paddingRight: 10,
+				backgroundColor: color,
+				paddingBottom: 0,
+				maxWidth: '80%',
+				marginBottom: 0,
+				flex: 1
+			}}>
+			<Text style={darkTextStyle}>
+				<Text>Username: </Text>
+				<Text
+					style={{ marginLeft: 5, color: "white" }}>
+					{user.username}
+				</Text>
+			</Text>
+
+			<Text style={darkTextStyle}>
+				<Text>Score: </Text>
+				<Text
+					style={{ marginLeft: 5, color: "white" }}>
+					{user.score}
+				</Text>
+			</Text>
 		</View>
 	);
 };
 
 export class User extends React.Component<UserProps, UserState> {
+	_loadingRef: Loading;
 	constructor(props) {
 		super(props);
 		this.state = {
-			fileUpl: undefined,
 			userScore: 0,
 			scoreBoard: [],
-			userPosition: -1,
-			loading: false
+			userPosition: -1
 		};
 	}
 
 	async componentDidMount() {
-		this.setState({ ...this.state, loading: true });
+		this.onScoreLoadStart();
 		await Promise.all([
 			this.loadUserScore(),
 			this.loadScoreBoard(),
 			this.getUserBoaardPosition()
 		]);
 
-		this.setState({ ...this.state, loading: false });
+		this.onScoreLoadEnd();
 	}
 
 	async loadUserScore() {
@@ -79,7 +111,10 @@ export class User extends React.Component<UserProps, UserState> {
 			const token = await getJWTToken();
 
 			const board = await get(BASE_URI + '/users/board', token);
-			this.setState({ ...this.state, scoreBoard: board });
+			this.setState({
+				...this.state,
+				scoreBoard: board
+			});
 		} catch (e) {
 			if (e.status === 401) {
 				overwriteNavigation(this.props.navigation, 'Unlogged');
@@ -102,75 +137,128 @@ export class User extends React.Component<UserProps, UserState> {
 
 	async insertNewKitten(event) {
 		this.props.navigation.navigate('Insert');
-		// event.preventDefault();
-		// if (!this.state.fileUpl) {
-		// 	return;
-		// }
-		// try {
-		// 	const token = await getJWTToken();
-		// 	const formData = new FormData();
-		// 	formData.append('image', this.state.fileUpl);
-		// 	const insertedKitten: IKitten = await post(
-		// 		'/kittens',
-		// 		formData,
-		// 		token
-		// 	);
-		// 	this.setState({ ...this.state, fileUpl: undefined, fileOk: true });
-		// } catch (e) {
-		// 	this.setState({ ...this.state, fileOk: false });
-		// 	if (e.status === 401) {
-		// 		overwriteNavigation(this.props.stackNavigation, 'Unlogged')
-		// 	}
-		// }
 	}
 
-	// onFileChange(event) {
-	// 	// if (
-	// 	// 	!event.target ||
-	// 	// 	!event.target.files ||
-	// 	// 	event.target.files.length < 0 ||
-	// 	// 	!event.target.files[0]
-	// 	// ) {
-	// 	// 	this.setState({ ...this.state, fileUpl: undefined });
-	// 	// } else {
-	// 	// 	this.setState({ ...this.state, fileUpl: event.target.files[0] });
-	// 	// }
-	// }
+	onScoreLoadStart() {
+		this._loadingRef.onFeatureChangeStart();
+	}
+
+	onScoreLoadEnd() {
+		this._loadingRef.onFeatureChangeEnd();
+	}
 
 	render() {
+		const ScoreBox = (
+			<View
+				style={[
+					alignCenter,
+					{
+						flexDirection: 'row',
+						justifyContent: 'space-evenly',
+						marginTop: 10,
+						marginBottom: 10
+					}
+				]}>
+				<Border
+					style={[
+						style.scoreContainer,
+						{ marginRight: 5, marginLeft: 10 }
+					]}>
+					<Text style={[textStyle]}>USER POSITION</Text>
+					<CircleBox
+						borderEnabled={true}
+						color={styleBase.secondaryColor}
+						style={[alignCenter]}>
+						<Text style={[clearTextStyle]}>
+							{this.state.userPosition}
+						</Text>
+					</CircleBox>
+				</Border>
+				<Border
+					style={[
+						style.scoreContainer,
+						{ marginRight: 10, marginLeft: 5 }
+					]}>
+					<Text style={[textStyle]}>USER SCORE</Text>
+					<CircleBox
+						borderEnabled={true}
+						color={styleBase.secondaryColor}
+						style={[alignCenter]}>
+						<Text style={[clearTextStyle]}>
+							{this.state.userScore}
+						</Text>
+					</CircleBox>
+				</Border>
+			</View>
+		);
+
+		const ScoreBoard = (
+			<View style={[alignCenter, { height: '100%', marginLeft:10,marginRight:10 }]}>
+				<Border
+					style={[
+						alignCenter,
+						{
+							width: '100%',
+							backgroundColor: styleBase.neutralColor,
+							borderRadius: 10,
+							marginBottom: 10
+						}
+					]}>
+					<Text
+						style={[
+							textStyle,
+							{ alignSelf: 'flex-start', padding: 10 }
+						]}>
+						SCORE BOARD:
+					</Text>
+					<Border
+						style={{
+							borderRadius: 10,
+							overflow: 'hidden',
+							marginBottom: 10,
+							flex: 1
+						}}>
+						{this.state.scoreBoard.map((item, index) => (
+							<UserElement
+								key={item.account.id as string}
+								user={item}
+								index={index}
+							/>
+						))}
+					</Border>
+				</Border>
+			</View>
+		);
+
 		return (
-			<View>
+			<View style={{ height: '100%', width: '100%' }}>
+				<Loading getRef={ref => (this._loadingRef = ref)} />
+
 				<ScrollView>
-					<Button
-						onPress={this.insertNewKitten.bind(this)}
-						title="Insert new Kitten!"
-					/>
-					{this.state.loading && <Text>Loading user data...</Text>}
-					{!this.state.loading && (
-						<View style={{ paddingTop: 10 }}>
-							<Text>USER SCORE {this.state.userScore}</Text>
-							<Text>USER POSITION {this.state.userPosition}</Text>
-							<Text>SCORE BOARD:</Text>
-							{this.state.scoreBoard.map((item, index) => (
-								<UserElement
-									key={item.account.id as string}
-									user={item}
-									index={index}
-								/>
-							))}
-							{/* <FlatList
-							data={this.state.scoreBoard}
-							renderItem={({ item, index }) => (
-								
-							)}
-							keyExtractor={(item, index) =>
-								item.account.id.toString()
-							}
-						/> */}
+					<View style={{ flex: 1 }}>
+						{ScoreBox}
+						<View style={{ width: '50%', paddingBottom: 10 }}>
+							<CustomButton
+								style={{ marginLeft: 10, marginRight: 10 }}
+								title="Insert new Kitten!"
+								onPress={this.insertNewKitten.bind(this)}
+							/>
 						</View>
-					)}
+						{ScoreBoard}
+					</View>
 				</ScrollView>
 			</View>
 		);
 	}
 }
+
+const style = StyleSheet.create({
+	scoreContainer: {
+		flex: 1,
+		alignItems: 'center',
+		height: '100%',
+		backgroundColor: styleBase.neutralColor,
+		borderRadius: 10,
+		marginBottom: 10
+	}
+});
