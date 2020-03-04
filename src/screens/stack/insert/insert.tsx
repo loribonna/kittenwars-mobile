@@ -1,13 +1,5 @@
 import * as React from 'react';
-import {
-	View,
-	Text,
-	Button,
-	Image,
-	ScrollView,
-	Dimensions,
-	StyleSheet
-} from 'react-native';
+import { View, Image, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
 import ImagePicker, {
@@ -20,10 +12,8 @@ import { BASE_URI } from '../../../helpers/statics';
 import { postFile } from '../../../helpers/crud';
 import { getJWTToken } from '../../../helpers/helpers';
 import { CustomTextInput } from '../../../components/input/textinput';
-import { ImageDisplay } from '../../../components/image/image';
 import { CustomButton } from '../../../components/button/button';
-import { alignCenter } from '../../../helpers/style.base';
-import { Border } from '../../../components/border/border';
+import { Loading } from '../../../components/loading/loading';
 
 const MAX_IMAGE_SIZE = 16 * 1024 * 1024 - 1; // 16 MB
 
@@ -36,7 +26,6 @@ interface InsertState {
 	kittenImage?: File;
 	kittenInfo: Partial<IKitten>;
 	confirmable: boolean;
-	loading: boolean;
 	editing: boolean;
 }
 
@@ -59,12 +48,12 @@ const imagePickerAsync = async (options: ImagePickerOptions) =>
 	);
 
 export class InsertKitten extends React.Component<InsertProp, InsertState> {
+	_loadingRef: Loading;
 	constructor(props) {
 		super(props);
 		this.state = {
 			kittenInfo: {},
 			confirmable: false,
-			loading: false,
 			editing: false
 		};
 	}
@@ -127,7 +116,7 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 		if (!this.checkState()) {
 			return;
 		}
-		this.setState({ ...this.state, loading: true });
+		this.onDataSendStart();
 
 		try {
 			const token = await getJWTToken();
@@ -144,9 +133,17 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 
 			this.props.navigation.goBack();
 		} catch (e) {
-			this.setState({ ...this.state, loading: false });
+			this.onDataSendEnd();
 			console.warn(e);
 		}
+	}
+
+	onDataSendStart() {
+		this._loadingRef.onFeatureChangeStart();
+	}
+
+	onDataSendEnd() {
+		this._loadingRef.onFeatureChangeEnd();
 	}
 
 	onEditingStart() {
@@ -162,6 +159,92 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 	}
 
 	render() {
+		const TextInputContainer = (
+			<View
+				style={{
+					height: '18%',
+					paddingTop: '1%',
+					width: '80%'
+				}}>
+				<CustomTextInput
+					style={{ width: '100%' }}
+					name="name"
+					value={this.state.kittenInfo.name?.toString()}
+					maxlen={40}
+					placeholder="Kitten name"
+					onTextChange={data => this.updateData(data)}
+					onEditingStart={this.onEditingStart.bind(this)}
+					onEditingEnd={this.onEditingEnd.bind(this)}
+				/>
+
+				<View style={{ paddingTop: '1%' }} />
+				<CustomTextInput
+					style={{ width: '100%' }}
+					name="age"
+					type="number"
+					value={this.state.kittenInfo.age?.toString()}
+					maxlen={2}
+					placeholder="Age (Optional)"
+					onEditingStart={this.onEditingStart.bind(this)}
+					onEditingEnd={this.onEditingEnd.bind(this)}
+					onTextChange={data => this.updateData(data)}
+				/>
+			</View>
+		);
+
+		const ImagePreviewContainer = this.state.editing ? null : (
+			<View
+				style={{
+					height: '60%',
+					width: '80%',
+					paddingTop: this.state.image ? '8%' : '1%'
+				}}>
+				{this.state.image && (
+					<Image
+						style={{
+							borderRadius: 20,
+							height: '100%',
+							width: null,
+							resizeMode: 'contain'
+						}}
+						source={{ uri: this.state.image.uri }}
+					/>
+				)}
+				<View
+					style={{
+						marginTop: '4%',
+						alignItems: 'center',
+						width: '100%'
+					}}>
+					<CustomButton
+						style={{
+							alignSelf: 'center',
+							width: '100%',
+							borderRadius: 30
+						}}
+						title={
+							this.state.image ? 'Change picture' : 'Take picture'
+						}
+						onPress={this.takePicture.bind(this)}
+					/>
+				</View>
+			</View>
+		);
+		const ConfirmButtonContainer = this.state.editing ? null : (
+			<View
+				style={{
+					height: '10%',
+					position: 'absolute',
+					bottom: 0
+				}}>
+				<CustomButton
+					disabled={!this.state.confirmable}
+					title="Confirm"
+					onPress={this.insertKitten.bind(this)}
+				/>
+			</View>
+		);
+
 		return (
 			<ScrollView
 				contentContainerStyle={{
@@ -169,90 +252,14 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 					height: '100%',
 					width: '100%'
 				}}>
-				<View
-					style={{
-						height: '18%',
-						paddingTop: '1%',
-						width: '80%'
-					}}>
-					<CustomTextInput
-						style={{ width: '100%' }}
-						name="name"
-						value={this.state.kittenInfo.name?.toString()}
-						maxlen={40}
-						placeholder="Kitten name"
-						onTextChange={data => this.updateData(data)}
-						onEditingStart={this.onEditingStart.bind(this)}
-						onEditingEnd={this.onEditingEnd.bind(this)}
-					/>
-
-					<View style={{ paddingTop: '1%' }} />
-					<CustomTextInput
-						style={{ width: '100%' }}
-						name="age"
-						type="number"
-						value={this.state.kittenInfo.age?.toString()}
-						maxlen={2}
-						placeholder="Age (Optional)"
-						onEditingStart={this.onEditingStart.bind(this)}
-						onEditingEnd={this.onEditingEnd.bind(this)}
-						onTextChange={data => this.updateData(data)}
-					/>
-				</View>
-				{!this.state.editing && (
-					<View
-						style={{
-							height: '60%',
-							width: '80%',
-							paddingTop: this.state.image ? '8%' : '1%'
-						}}>
-						{this.state.image && (
-							<Image
-								style={{
-									borderRadius: 20,
-									height: '100%',
-									width: null,
-									resizeMode: 'contain'
-								}}
-								source={{ uri: this.state.image.uri }}
-							/>
-						)}
-						<View
-							style={{
-								marginTop: '4%',
-								alignItems: 'center',
-								width: '100%'
-							}}>
-							<CustomButton
-								style={{
-									alignSelf: 'center',
-									width: '100%',
-									borderRadius: 30
-								}}
-								title={
-									this.state.image
-										? 'Change picture'
-										: 'Take picture'
-								}
-								onPress={this.takePicture.bind(this)}
-							/>
-						</View>
-					</View>
-				)}
-				{!this.state.editing && (
-					<View
-						style={{
-							height: '10%',
-							position: 'absolute',
-							bottom: 0
-						}}>
-						<CustomButton
-							disabled={!this.state.confirmable}
-							title="Confirm"
-							onPress={this.insertKitten.bind(this)}
-						/>
-					</View>
-				)}
+				<Loading
+					getRef={ref => {
+						this._loadingRef = ref;
+					}}
+				/>
+				{TextInputContainer}
+				{ImagePreviewContainer}
+				{ConfirmButtonContainer}
 			</ScrollView>
 		);
 	}

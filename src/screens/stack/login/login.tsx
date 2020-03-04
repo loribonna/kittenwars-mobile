@@ -1,17 +1,9 @@
 import * as React from 'react';
-import { post } from '../../../helpers/crud';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import { BASE_URI } from '../../../helpers/statics';
-import {
-	GoogleSignin,
-	GoogleSigninButton,
-	statusCodes,
-	User
-} from '@react-native-community/google-signin';
-import { setJWTToken, overwriteNavigation } from '../../../helpers/helpers';
+import { View, Text } from 'react-native';
+import { GoogleSigninButton } from '@react-native-community/google-signin';
+import { overwriteNavigation } from '../../../helpers/helpers';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../../App';
-import { CLIENT_ID } from 'react-native-dotenv';
 import { styleBase, alignCenter } from '../../../helpers/style.base';
 import { LoginService } from '../../../helpers/login.service';
 
