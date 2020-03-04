@@ -1,18 +1,11 @@
 import * as React from 'react';
 import { get } from '../../helpers/crud';
 import { IKitten } from '../../helpers/interfaces';
-import {
-	View,
-	Text,
-	StyleSheet,
-	Dimensions,
-	LayoutRectangle
-} from 'react-native';
+import { View, Dimensions, LayoutRectangle } from 'react-native';
 import { ImageDisplay } from '../image/image';
 import { BASE_URI } from '../../helpers/statics';
-import { styleBase, mainBackgroundColor } from '../../helpers/style.base';
-import { ScrollView } from 'react-native-gesture-handler';
-import { Carousel, Direction } from '../carousel/carousel';
+import { mainBackgroundColor } from '../../helpers/style.base';
+import { Carousel } from '../carousel/carousel';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../App';
 import { Loading } from '../loading/loading';
@@ -143,7 +136,9 @@ export abstract class ScoreBase extends React.Component<
 			<View onLayout={e => this.measureView(e.nativeEvent.layout)}>
 				<Loading
 					featuresNumber={2}
-					getRef={ref => (this._loadingRef = ref)}
+					getRef={ref => {
+						this._loadingRef = ref;
+					}}
 				/>
 				<Carousel
 					loading={this.state.loading}

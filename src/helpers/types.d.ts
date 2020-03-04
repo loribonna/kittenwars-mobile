@@ -7,3 +7,9 @@ export type SubjectData = {
 	value: any;
 	type?: 'number' | 'string';
 };
+
+export type KittenVote = {
+	kittenVoted: String;
+	kittenA: String;
+	kittenB: String;
+};

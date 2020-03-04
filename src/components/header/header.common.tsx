@@ -1,7 +1,5 @@
 import React from 'react';
-import { Button, View, Text, StyleSheet } from 'react-native';
-import { styleBase } from '../../helpers/style.base';
-import { Border } from '../border/border';
+import { Text, StyleSheet } from 'react-native';
 import { CustomButton } from '../button/button';
 
 export const HeaderButton: React.FunctionComponent<{
