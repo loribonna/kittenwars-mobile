@@ -1,20 +1,11 @@
 import * as React from 'react';
 import {
 	View,
-	StyleSheet,
-	NativeSyntheticEvent,
-	NativeScrollEvent,
-	Dimensions,
 	FlatList,
 	ViewToken,
-	Text,
 	ViewStyle,
 	StyleProp
 } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { IKitten } from '../../helpers/interfaces';
-import { styleBase, alignCenter } from '../../helpers/style.base';
-import { Loading } from '../loading/loading';
 
 export type Direction = 'next' | 'previous';
 

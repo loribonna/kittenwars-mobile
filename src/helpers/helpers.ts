@@ -2,9 +2,6 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { get } from './crud';
 import { BASE_URI } from './statics';
 import { CommonActions } from '@react-navigation/native';
-import {
-	GoogleSignin
-} from '@react-native-community/google-signin';
 
 export const getJWTToken = async () => {
 	const token = await AsyncStorage.getItem('token');

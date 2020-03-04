@@ -7,7 +7,6 @@ import {
 	Image,
 	Text,
 	TouchableHighlight,
-	Dimensions,
 	LayoutRectangle
 } from 'react-native';
 import { styleBase } from '../../helpers/style.base';
@@ -22,6 +21,7 @@ interface ImageDisplayProps {
 	disableRadius?: boolean;
 	onLoadingStart?: (ref: ImageDisplay) => void;
 	enableCenterOffset?: boolean;
+	disabled?: boolean;
 }
 
 interface ContainerDim {
@@ -199,11 +199,9 @@ export class ImageDisplay extends React.Component<
 	}
 
 	getImg(img?: string) {
-		if (img) {
-			return 'data:image/png;base64,' + img;
-		}
-		if (this.state.img) {
-			return 'data:image/png;base64,' + this.state.img;
+		const image = img ? img : this.state.img;
+		if (image) {
+			return 'data:image/png;base64,' + image;
 		}
 	}
 
@@ -276,62 +274,57 @@ export class ImageDisplay extends React.Component<
 	}
 
 	render() {
-		let labelDisplay: () => JSX.Element = () => null;
-		if (this.props.label) {
-			labelDisplay = () => {
-				return (
-					<View
-						onLayout={e => this.measureLabel(e.nativeEvent.layout)}
-						style={{
-							alignItems: 'center',
-							justifyContent: 'center',
-							backgroundColor: styleBase.neutralColor
-						}}>
-						<Text
-							style={{
-								color: styleBase.textColor,
-								paddingTop: 5
-							}}>
-							{this.props.label}
-						</Text>
-					</View>
-				);
-			};
-		} else {
+		if (!this.props.label) {
 			this._labelSetup = true;
 		}
 
-		const imageDisplay: () => JSX.Element = () => {
-			return (
-				<View style={this.getImgContainerSize()}>
-					<Border
-						width={2}
+		const LabelDisplay: JSX.Element = this.props.label ? (
+			<View
+				onLayout={e => this.measureLabel(e.nativeEvent.layout)}
+				style={{
+					alignItems: 'center',
+					justifyContent: 'center',
+					backgroundColor: styleBase.neutralColor
+				}}>
+				<Text
+					style={{
+						color: styleBase.textColor,
+						paddingTop: 5
+					}}>
+					{this.props.label}
+				</Text>
+			</View>
+		) : null;
+
+		const ImageDisplay: JSX.Element = (
+			<View style={this.getImgContainerSize()}>
+				<Border
+					width={2}
+					style={[
+						this.props.disableRadius
+							? null
+							: {
+									borderRadius: 10,
+									overflow: 'hidden'
+							  },
+						{
+							marginTop: this.getContainerOffset()
+						}
+					]}>
+					<Image
+						source={{ uri: this.getImg() }}
 						style={[
-							this.props.disableRadius
-								? null
-								: {
-										borderRadius: 10,
-										overflow: 'hidden'
-								  },
 							{
-								marginTop: this.getContainerOffset()
-							}
-						]}>
-						<Image
-							source={{ uri: this.getImg() }}
-							style={[
-								{
-									resizeMode: 'contain'
-								},
-								this.getImgSize()
-							]}
-							key={this.state.imageID}
-						/>
-						{labelDisplay()}
-					</Border>
-				</View>
-			);
-		};
+								resizeMode: 'contain'
+							},
+							this.getImgSize()
+						]}
+						key={this.state.imageID}
+					/>
+					{LabelDisplay}
+				</Border>
+			</View>
+		);
 
 		return (
 			<View
@@ -340,11 +333,16 @@ export class ImageDisplay extends React.Component<
 				}}
 				onLayout={event => this.measureView(event.nativeEvent.layout)}>
 				{this.props.onClick && (
-					<TouchableHighlight onPress={this.imageClick.bind(this)}>
-						{imageDisplay()}
+					<TouchableHighlight
+						onPress={
+							this.props.disabled
+								? null
+								: this.imageClick.bind(this)
+						}>
+						{ImageDisplay}
 					</TouchableHighlight>
 				)}
-				{!this.props.onClick && imageDisplay()}
+				{!this.props.onClick && ImageDisplay}
 			</View>
 		);
 	}
