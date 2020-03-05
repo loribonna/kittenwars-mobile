@@ -7,7 +7,9 @@ import {
 	Image,
 	Text,
 	TouchableHighlight,
-	LayoutRectangle
+	LayoutRectangle,
+	StyleProp,
+	ViewStyle
 } from 'react-native';
 import { styleBase } from '../../helpers/style.base';
 import { Border } from '../border/border';
@@ -22,6 +24,7 @@ interface ImageDisplayProps {
 	onLoadingStart?: (ref: ImageDisplay) => void;
 	enableCenterOffset?: boolean;
 	disabled?: boolean;
+	style?: StyleProp<ViewStyle>;
 }
 
 interface ContainerDim {
@@ -103,6 +106,7 @@ export class ImageDisplay extends React.Component<
 	}
 
 	async componentDidUpdate() {
+		this._mounted = true;
 		if (
 			this.state.imageID != this.props.imageID ||
 			this.state.fullUri != this.props.fullUri
@@ -121,14 +125,18 @@ export class ImageDisplay extends React.Component<
 
 	_getImgRatio(img: string): Promise<number> {
 		return new Promise<number>((resolve, reject) => {
-			if (!img) {
-				resolve(1);
-			} else {
-				Image.getSize(
-					img,
-					(w, h) => resolve(h / w),
-					e => reject(e)
-				);
+			try {
+				if (!img) {
+					resolve(1);
+				} else {
+					Image.getSize(
+						img,
+						(w, h) => resolve(h / w),
+						e => reject(e)
+					);
+				}
+			} catch (e) {
+				reject(e);
 			}
 		});
 	}
@@ -190,7 +198,6 @@ export class ImageDisplay extends React.Component<
 					loading: false,
 					imgRatio: ratio
 				});
-
 				this.props.onLoadingEnd ? this.props.onLoadingEnd(this) : null;
 			}
 		} catch (e) {
@@ -241,7 +248,8 @@ export class ImageDisplay extends React.Component<
 		if (this.state.imgRatio >= 1) {
 			//height greater or equal width
 			const h = contH;
-			const w = contH * this.state.imgRatio;
+			const w = contH / this.state.imgRatio;
+
 			return {
 				height: h,
 				width: w
@@ -249,7 +257,6 @@ export class ImageDisplay extends React.Component<
 		} else {
 			const w = containerSize.width;
 			const h = w * this.state.imgRatio;
-
 			return {
 				height: h,
 				width: w
@@ -308,14 +315,16 @@ export class ImageDisplay extends React.Component<
 									overflow: 'hidden'
 							  },
 						{
-							marginTop: this.getContainerOffset()
-						}
+							marginTop: this.getContainerOffset(),
+							backgroundColor:styleBase.neutralColor
+						},
+						this.props.style
 					]}>
 					<Image
 						source={{ uri: this.getImg() }}
 						style={[
 							{
-								resizeMode: 'contain'
+								resizeMode: "contain"
 							},
 							this.getImgSize()
 						]}
