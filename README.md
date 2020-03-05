@@ -13,7 +13,8 @@ L'applicativo è sviluppato (e testato) solo per Android.
 ## Requisiti
 
 -   [Node](https://nodejs.org/)
-
+-   [Android Studio](https://developer.android.com/studio)
+-   Java JDK
 L'applicativo necessita di un file di ambiente (`.env`) comprensivo di:
 
 -   `CLIENT_ID`: configurazione applicativo per accesso a google.
