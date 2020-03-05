@@ -1,10 +1,21 @@
 import * as React from 'react';
 import { get } from '../../helpers/crud';
 import { IKitten } from '../../helpers/interfaces';
-import { View, Dimensions, LayoutRectangle } from 'react-native';
+import {
+	View,
+	Dimensions,
+	LayoutRectangle,
+	Text,
+	StyleProp,
+	ViewStyle
+} from 'react-native';
 import { ImageDisplay } from '../image/image';
 import { BASE_URI } from '../../helpers/statics';
-import { mainBackgroundColor } from '../../helpers/style.base';
+import {
+	mainBackgroundColor,
+	alignCenter,
+	textStyle
+} from '../../helpers/style.base';
 import { Carousel } from '../carousel/carousel';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../App';
@@ -22,7 +33,7 @@ interface ScoreState {
 	viewHeight: number;
 }
 
-const screenWidth = Dimensions.get('screen').width;
+const baseWidth = Dimensions.get('screen').width;
 
 interface KittensRenderProps {
 	kittens: IKitten[];
@@ -30,22 +41,25 @@ interface KittensRenderProps {
 	onLoadEnd: () => void;
 	onLoadStart: () => void;
 	key?: any;
+	style?: StyleProp<ViewStyle>;
 }
 
 const KittensRender: React.FunctionComponent<KittensRenderProps> = ({
 	kittens,
 	type,
 	onLoadEnd,
-	onLoadStart
+	onLoadStart,
+	style
 }): JSX.Element => {
 	if (!kittens || !Array.isArray(kittens) || !kittens[0]) {
 		return null;
 	}
 	return (
-		<View style={{ height: '100%', width: screenWidth }}>
+		<View style={[alignCenter, { height: '100%', width: baseWidth }]}>
 			{Array.isArray(kittens) && kittens[0] && (
-				<View style={{ height: '100%', width: '100%' }}>
+				<View style={{ height: '80%', width: '80%' }}>
 					<ImageDisplay
+						style={style}
 						enableCenterOffset={true}
 						onLoadingEnd={() => {
 							onLoadEnd();
@@ -82,23 +96,35 @@ export abstract class ScoreBase extends React.Component<
 	}
 
 	async componentDidMount() {
-		await this.loadMostLikedKitten();
-		await this.loadLeastLikedKitten();
+		this.onKittenImageChangeStart();
+
+		try {
+			const [best, worst] = await Promise.all([
+				this.loadMostLikedKitten(),
+				this.loadLeastLikedKitten()
+			]);
+			this.setState({
+				...this.state,
+				bestKittens: best,
+				worstKittens: worst
+			});
+		} catch (e) {
+			console.warn(e);
+		}
+		this.onKittenImageChangeEnd();
 	}
 
-	async loadMostLikedKitten() {
+	async loadMostLikedKitten(): Promise<IKitten[]> {
 		try {
-			const kittens = await get(BASE_URI + '/score/best');
-			this.setState({ ...this.state, bestKittens: kittens });
+			return await get(BASE_URI + '/score/best');
 		} catch (e) {
 			console.warn(e);
 		}
 	}
 
-	async loadLeastLikedKitten() {
+	async loadLeastLikedKitten(): Promise<IKitten[]> {
 		try {
-			const kittens = await get(BASE_URI + '/score/worst');
-			this.setState({ ...this.state, worstKittens: kittens });
+			return await get(BASE_URI + '/score/worst');
 		} catch (e) {
 			console.warn(e);
 		}
@@ -131,22 +157,49 @@ export abstract class ScoreBase extends React.Component<
 		});
 	}
 
+	onLoadEnd() {
+		this.setState({ ...this.state, loading: false });
+	}
+
+	onLoadStart() {
+		this.setState({ ...this.state, loading: true });
+	}
+
 	render() {
+		const loadOk =
+			!this.state.loading &&
+			(!this.state.bestKittens ||
+				!this.state.worstKittens ||
+				!this.state.bestKittens.length ||
+				!this.state.worstKittens.length);
+
 		return (
-			<View onLayout={e => this.measureView(e.nativeEvent.layout)}>
+			<View
+				style={{
+					height: '100%',
+					width: '100%',
+					backgroundColor: mainBackgroundColor
+				}}
+				onLayout={e => this.measureView(e.nativeEvent.layout)}>
 				<Loading
-					featuresNumber={2}
+					onLoadStart={this.onLoadStart.bind(this)}
+					onLoadEnd={this.onLoadEnd.bind(this)}
 					getRef={ref => {
 						this._loadingRef = ref;
 					}}
 				/>
+				{loadOk && (
+					<View style={alignCenter}>
+						<Text style={textStyle}>Not enough Kittens!</Text>
+					</View>
+				)}
 				<Carousel
 					loading={this.state.loading}
-					style={{ backgroundColor: mainBackgroundColor }}
 					onPageChange={this.scrollEnd.bind(this)}
 					data={
 						[
 							{
+								style: { alignItems: 'center' },
 								kittens: this.state.bestKittens,
 								type: 'best',
 								key: 'best',
@@ -158,6 +211,7 @@ export abstract class ScoreBase extends React.Component<
 								)
 							},
 							{
+								style: { alignItems: 'center' },
 								kittens: this.state.worstKittens,
 								type: 'worst',
 								key: 'worst',

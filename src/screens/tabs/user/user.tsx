@@ -263,9 +263,9 @@ const style = StyleSheet.create({
 	scoreContainer: {
 		flex: 1,
 		alignItems: 'center',
-		height: '100%',
 		backgroundColor: styleBase.neutralColor,
 		borderRadius: 10,
-		marginBottom: 10
+		marginBottom: 10,
+		paddingBottom: 10
 	}
 });

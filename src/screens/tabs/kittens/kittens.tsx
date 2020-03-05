@@ -7,7 +7,7 @@ import { getJWTToken } from '../../../helpers/helpers';
 import { View, Text, StyleSheet, LayoutRectangle } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Loading } from '../../../components/loading/loading';
-import { textStyle } from '../../../helpers/style.base';
+import { textStyle, alignCenter, mainBackgroundColor, styleBase } from '../../../helpers/style.base';
 import { Border } from '../../../components/border/border';
 import { LoginService } from '../../../helpers/login.service';
 import { KittenVote } from '../../../helpers/types';
@@ -39,7 +39,11 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 	}
 
 	async componentDidMount() {
-		await this.loadRandomKittens();
+		try {
+			await this.loadRandomKittens();
+		} catch (e) {
+			console.warn(e);
+		}
 	}
 
 	async loadRandomKittens() {
@@ -59,14 +63,17 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 						empty: true
 					});
 				}
+			} else {
+				newState = Object.assign(newState, {
+					empty: true
+				});
 			}
 		} catch (e) {
 			if (e.status === 401) {
 				LoginService.logout(this.props.navigation);
 			}
-		} finally {
-			this.setState({ ...this.state, ...newState });
 		}
+		this.setState({ ...this.state, ...newState });
 	}
 
 	async voteKitten(kittenSavedName: String) {
@@ -144,6 +151,14 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 	}
 
 	render() {
+		if (this.state.empty) {
+			return (
+				<View style={[alignCenter, { height: '100%', width: '100%' }]}>
+					<Text style={textStyle}>No kittens to load</Text>
+					<Text style={textStyle}>INSERT KITTEN!</Text>
+				</View>
+			);
+		}
 		const borderWidth = 10;
 		const height = this.state.viewSize
 			? this.state.viewSize.height - borderWidth
@@ -162,6 +177,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 			kitten ? (
 				<Border style={style.imageContainer}>
 					<ImageDisplay
+						style={{ alignItems: 'center' }}
 						disabled={this._disableClick}
 						onLoadingStart={() => this.onKittenImageChangeStart()}
 						onLoadingEnd={() => this.onKittenImageChangeEnd()}
@@ -178,6 +194,34 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 				style={{
 					flex: 1
 				}}>
+				<Loading
+					getRef={ref => {
+						this._loadingRef = ref;
+					}}
+					onLoadStart={() => this.onLoadStart()}
+					onLoadEnd={() => this.onLoadEnd()}
+				/>
+
+				{this.state.showScore && (
+					<View
+						style={{
+							position: 'absolute',
+							zIndex: 2000,
+							height: "100%",
+							backgroundColor:styleBase.primaryColor,
+							width: '100%',
+							justifyContent: 'center',
+							alignItems: 'center'
+						}}>
+						{this.state.win && (
+							<Text style={style.text}>You WON!</Text>
+						)}
+						{!this.state.win && (
+							<Text style={style.text}>You Lose :(</Text>
+						)}
+					</View>
+				)}
+
 				<View
 					onLayout={e => this.measureView(e.nativeEvent.layout)}
 					style={{
@@ -187,36 +231,6 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 						borderWidth: 5,
 						borderColor: 'transparent'
 					}}>
-					<Loading
-						featuresNumber={2}
-						getRef={ref => {
-							this._loadingRef = ref;
-						}}
-					/>
-					{this.state.showScore && (
-						<View
-							style={{
-								position: 'absolute',
-								zIndex: 1000,
-								height: height,
-								width: '100%',
-								justifyContent: 'center',
-								alignItems: 'center'
-							}}>
-							{this.state.win && (
-								<Text style={style.text}>You WON!</Text>
-							)}
-							{!this.state.win && (
-								<Text style={style.text}>You Lose :(</Text>
-							)}
-						</View>
-					)}
-					{!this.state.loading && this.state.empty && (
-						<Text style={style.text}>
-							No kittens to load - INSERT KITTEN
-						</Text>
-					)}
-
 					{getKittenRender(this.state.leftKitten)}
 					<View style={{ height: 1, width: '100%' }} />
 					{getKittenRender(this.state.rightKitten)}

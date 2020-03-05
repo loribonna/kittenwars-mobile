@@ -10,7 +10,7 @@ import {
 export type Direction = 'next' | 'previous';
 
 interface CarouselProps {
-	style: StyleProp<ViewStyle>;
+	style?: StyleProp<ViewStyle>;
 	onPageChange?: (key: any) => void;
 	data: any[];
 	itemRender: (item: any) => JSX.Element;
@@ -48,7 +48,7 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
 
 	render() {
 		return (
-			<View style={this.props.style}>
+			<View style={[this.props.style,{height:"100%"}]}>
 				<FlatList
 					horizontal={true}
 					pagingEnabled={true}

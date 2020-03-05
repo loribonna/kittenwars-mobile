@@ -1,15 +1,22 @@
 import React from 'react';
-import { View, Text, Dimensions, StyleSheet } from 'react-native';
+import {
+	View,
+	Text,
+	Dimensions,
+	StyleSheet,
+	ViewStyle,
+	StyleProp
+} from 'react-native';
 import { alignCenter, styleBase } from '../../helpers/style.base';
 
 interface LoadingInterface {
 	width?: number;
-	featuresNumber?: number;
 	manual?: boolean;
 	getRef: (ref: Loading) => void;
 	onLoadEnd?: () => void;
 	onLoadStart?: () => void;
 	text?: string;
+	style?: StyleProp<ViewStyle>;
 }
 
 interface LoadingState {
@@ -18,15 +25,11 @@ interface LoadingState {
 
 export class Loading extends React.Component<LoadingInterface, LoadingState> {
 	private _width = Dimensions.get('window').width;
-	private _nFeatures = 1;
 	private _cFeatures = 0;
 	constructor(props) {
 		super(props);
 		if (props.width) {
 			this._width = props.width;
-		}
-		if (props.featuresNumber) {
-			this._nFeatures = props.featuresNumber;
 		}
 
 		this.state = { showLoading: false };
@@ -40,7 +43,7 @@ export class Loading extends React.Component<LoadingInterface, LoadingState> {
 	}
 
 	public onFeatureChangeStart() {
-		this._cFeatures > 0 ? this._cFeatures-- : null;
+		this._cFeatures++;
 		if (!this.state.showLoading) {
 			this.setState({
 				...this.state,
@@ -51,8 +54,8 @@ export class Loading extends React.Component<LoadingInterface, LoadingState> {
 	}
 
 	public onFeatureChangeEnd() {
-		this._cFeatures++;
-		if (this._cFeatures >= this._nFeatures) {
+		this._cFeatures > 0 ? this._cFeatures-- : null;
+		if (this._cFeatures == 0) {
 			this.setState({
 				...this.state,
 				showLoading: false
@@ -71,7 +74,8 @@ export class Loading extends React.Component<LoadingInterface, LoadingState> {
 						zIndex: 1000,
 						backgroundColor: styleBase.primaryColor
 					},
-					style.container
+					style.container,
+					this.props.style
 				]}>
 				<Text style={{ fontSize: this._width / 10, color: 'white' }}>
 					{this.props.text || 'LOADING..'}
