@@ -243,7 +243,7 @@ export class InsertKitten extends React.Component<InsertProp, InsertState> {
 					onPress={this.insertKitten.bind(this)}
 				/>
 			</View>
-		);
+		);		
 
 		return (
 			<ScrollView
