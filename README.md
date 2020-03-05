@@ -1,16 +1,18 @@
 # KITTENWARS
 
-Applicativo mobile (React Native) di Kittenwars. L'applicativo è sviluppato e
-testato solo per Android.
+Applicativo mobile (React Native) di Kittenwars.
+L'applicativo è sviluppato (e testato) solo per Android.
 
 -   Prima installazione: `npm install`.
 -   Compilazione (release):
     -   Prima fase: `npm run android:bundle`,
-    -   Seconda fase:
+    -   Seconda fase: (col device android collegato)
         `cd android && ./gradlew assembleRelease -x bundleReleaseJsAndAssets`
 -   Avvio su device in modalità debug: `npm run android`
 
 ## Requisiti
+
+-   [Node](https://nodejs.org/)
 
 L'applicativo necessita di un file di ambiente (`.env`) comprensivo di:
 
@@ -24,6 +26,23 @@ Test:
 -   La maggior parte dei componenti effettuano operazioni CRUD basiche. L'unico
     test effettuato si trova in `dto.spec.ts` per verificare il funzionamento
     dei DTO.
+
+## Note
+
+Per avviare in locale l'applicativo è necessario il file `.env`. 
+In aggiunta, dato che il client deve conoscere l'indirizzo del server, è necessario impostare la variabile
+`BASE_URI` in `src/helpers/statics.ts` con il corretto indirizzo.
+Se viene usato un indirizzo locale, il device deve essere collegato alla stessa rete dell'host server.
+
+È possibile visionare la versione collegata al server Heroku:
+- `git pull origin heroku`: scaricare il branch heroku, contenente la configurazione corretta.
+- `git checkout heroku`: positionarzi sul branch heroku.
+- Compilare ed avviare il progetto con `npm run android`.
+
+Purtroppo l'hosting Heroku in forma gratuita non mantiene i file statici. Pertanto è necessario, ad ogni riavvio 
+dalla sospensione, caricare le immagini dei kitten da usare nell'applicativo.
+Dato che le immagini caricate vanno validate da un utente admin, e dato che l'unico modo per impostare un utente come admin è 
+agire sul database, questo rende necessario un contatto con lo sviluppatore.
 
 ## Traccia concordata
 
