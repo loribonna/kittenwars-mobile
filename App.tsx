@@ -132,7 +132,7 @@ export default class App extends React.Component<AppProps, AppState> {
 							),
 
 							headerTitle: () => (
-								<HeaderTitle title={'Best Kitten!'} />
+								<HeaderTitle title={'Kittenwars!'} />
 							)
 						})}
 						name="Unlogged"
@@ -159,7 +159,7 @@ export default class App extends React.Component<AppProps, AppState> {
 								<HeaderButton
 									title="logout"
 									onPress={() =>
-										this._loginService.logout(navigation)
+										LoginService.logout(navigation)
 									}
 								/>
 							),

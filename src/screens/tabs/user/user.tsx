@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
+import { getJWTToken } from '../../../helpers/helpers';
 import { get } from '../../../helpers/crud';
 import { IUser } from '../../../helpers/interfaces';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
@@ -17,6 +17,7 @@ import { CircleBox } from '../../../components/circleBox/circleBox';
 import { Loading } from '../../../components/loading/loading';
 import { CustomButton } from '../../../components/button/button';
 import { Border } from '../../../components/border/border';
+import { LoginService } from '../../../helpers/login.service';
 
 interface UserProps {
 	navigation: StackNavigationProp<RootStackParamList, 'Logged'>;
@@ -54,16 +55,14 @@ const UserElement: React.FunctionComponent<UserElementProp> = ({
 			}}>
 			<Text style={darkTextStyle}>
 				<Text>Username: </Text>
-				<Text
-					style={{ marginLeft: 5, color: "white" }}>
+				<Text style={{ marginLeft: 5, color: 'white' }}>
 					{user.username}
 				</Text>
 			</Text>
 
 			<Text style={darkTextStyle}>
 				<Text>Score: </Text>
-				<Text
-					style={{ marginLeft: 5, color: "white" }}>
+				<Text style={{ marginLeft: 5, color: 'white' }}>
 					{user.score}
 				</Text>
 			</Text>
@@ -87,7 +86,7 @@ export class User extends React.Component<UserProps, UserState> {
 		await Promise.all([
 			this.loadUserScore(),
 			this.loadScoreBoard(),
-			this.getUserBoaardPosition()
+			this.getUserBoardPosition()
 		]);
 
 		this.onScoreLoadEnd();
@@ -101,7 +100,7 @@ export class User extends React.Component<UserProps, UserState> {
 			this.setState({ ...this.state, userScore: score });
 		} catch (e) {
 			if (e.status === 401) {
-				overwriteNavigation(this.props.navigation, 'Unlogged');
+				LoginService.logout(this.props.navigation);
 			}
 		}
 	}
@@ -117,12 +116,12 @@ export class User extends React.Component<UserProps, UserState> {
 			});
 		} catch (e) {
 			if (e.status === 401) {
-				overwriteNavigation(this.props.navigation, 'Unlogged');
+				LoginService.logout(this.props.navigation);
 			}
 		}
 	}
 
-	async getUserBoaardPosition() {
+	async getUserBoardPosition() {
 		try {
 			const token = await getJWTToken();
 
@@ -130,12 +129,12 @@ export class User extends React.Component<UserProps, UserState> {
 			this.setState({ ...this.state, userPosition: position });
 		} catch (e) {
 			if (e.status === 401) {
-				overwriteNavigation(this.props.navigation, 'Unlogged');
+				LoginService.logout(this.props.navigation);
 			}
 		}
 	}
 
-	async insertNewKitten(event) {
+	async insertNewKitten() {
 		this.props.navigation.navigate('Insert');
 	}
 
@@ -193,7 +192,11 @@ export class User extends React.Component<UserProps, UserState> {
 		);
 
 		const ScoreBoard = (
-			<View style={[alignCenter, { height: '100%', marginLeft:10,marginRight:10 }]}>
+			<View
+				style={[
+					alignCenter,
+					{ height: '100%', marginLeft: 10, marginRight: 10 }
+				]}>
 				<Border
 					style={[
 						alignCenter,
@@ -232,7 +235,11 @@ export class User extends React.Component<UserProps, UserState> {
 
 		return (
 			<View style={{ height: '100%', width: '100%' }}>
-				<Loading getRef={ref => (this._loadingRef = ref)} />
+				<Loading
+					getRef={ref => {
+						this._loadingRef = ref;
+					}}
+				/>
 
 				<ScrollView>
 					<View style={{ flex: 1 }}>
@@ -256,9 +263,9 @@ const style = StyleSheet.create({
 	scoreContainer: {
 		flex: 1,
 		alignItems: 'center',
-		height: '100%',
 		backgroundColor: styleBase.neutralColor,
 		borderRadius: 10,
-		marginBottom: 10
+		marginBottom: 10,
+		paddingBottom: 10
 	}
 });

@@ -47,6 +47,8 @@ export class CircleBox extends React.Component<
 		});
 	}
 
+	
+
 	render() {
 		const circleBox = (
 			<View
@@ -57,7 +59,8 @@ export class CircleBox extends React.Component<
 					{
 						backgroundColor: this.props.color
 							? this.props.color
-							: null
+							: null,
+							padding:15
 					}
 				]}>
 				{this.props.children}
@@ -66,10 +69,8 @@ export class CircleBox extends React.Component<
 
 		if (this.props.borderEnabled) {
 			const radius = this.getStyle().borderRadius || null;
-			const h = this.getStyle().height || null;
-			const w = this.getStyle().width || null;
 			return (
-				<Border style={{ borderRadius: radius, height: h, width: w }}>
+				<Border style={{flex:1, borderRadius: radius}}>
 					{circleBox}
 				</Border>
 			);

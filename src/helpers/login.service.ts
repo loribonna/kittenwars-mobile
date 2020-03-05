@@ -7,6 +7,7 @@ import { CLIENT_ID } from 'react-native-dotenv';
 import { post } from './crud';
 import { BASE_URI } from './statics';
 import { setJWTToken, removeJWTToken, overwriteNavigation } from './helpers';
+
 export class LoginService {
 	async setup(): Promise<boolean> {
 		GoogleSignin.configure({
@@ -50,10 +51,6 @@ export class LoginService {
 		}
 	}
 
-	test() {
-		return 'A';
-	}
-
 	async silentSignIn(): Promise<boolean> {
 		try {
 			const userInfo = await GoogleSignin.signInSilently();
@@ -67,7 +64,7 @@ export class LoginService {
 		return false;
 	}
 
-	async logout(navigation) {
+	static async logout(navigation) {
 		try {
 			//await GoogleSignin.revokeAccess();
 			await removeJWTToken();

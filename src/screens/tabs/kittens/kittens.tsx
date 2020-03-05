@@ -3,22 +3,14 @@ import { ImageDisplay } from '../../../components/image/image';
 import { get, put } from '../../../helpers/crud';
 import { VOTE_URI } from '../../../helpers/statics';
 import { IKitten } from '../../../helpers/interfaces';
-import { getJWTToken, overwriteNavigation } from '../../../helpers/helpers';
-import {
-	View,
-	Text,
-	Dimensions,
-	StyleSheet,
-	LayoutRectangle
-} from 'react-native';
+import { getJWTToken } from '../../../helpers/helpers';
+import { View, Text, StyleSheet, LayoutRectangle } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Loading } from '../../../components/loading/loading';
-import {
-	styleBase,
-	textStyle,
-	mainBackgroundColor
-} from '../../../helpers/style.base';
+import { textStyle, alignCenter, mainBackgroundColor, styleBase } from '../../../helpers/style.base';
 import { Border } from '../../../components/border/border';
+import { LoginService } from '../../../helpers/login.service';
+import { KittenVote } from '../../../helpers/types';
 
 interface KittensProps extends BottomTabBarProps {}
 
@@ -35,7 +27,6 @@ interface KittensState {
 const SCORE_TIMEOUT = 500;
 
 export class Kittens extends React.Component<KittensProps, KittensState> {
-	_mounted = false;
 	_disableClick = false;
 	_loadingRef: Loading;
 	constructor(props) {
@@ -48,12 +39,11 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 	}
 
 	async componentDidMount() {
-		this._mounted = true;
-		await this.loadRandomKittens();
-	}
-
-	componentWillUnmount() {
-		this._mounted = false;
+		try {
+			await this.loadRandomKittens();
+		} catch (e) {
+			console.warn(e);
+		}
 	}
 
 	async loadRandomKittens() {
@@ -73,14 +63,17 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 						empty: true
 					});
 				}
+			} else {
+				newState = Object.assign(newState, {
+					empty: true
+				});
 			}
 		} catch (e) {
 			if (e.status === 401) {
-				overwriteNavigation(this.props.navigation, 'Unlogged');
+				LoginService.logout(this.props.navigation);
 			}
-		} finally {
-			this.setState({ ...this.state, ...newState });
 		}
+		this.setState({ ...this.state, ...newState });
 	}
 
 	async voteKitten(kittenSavedName: String) {
@@ -99,7 +92,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 				? this.state.leftKitten
 				: this.state.rightKitten;
 
-		const vote = {
+		const vote: KittenVote = {
 			kittenVoted: votedKitten._id,
 			kittenA: this.state.leftKitten._id,
 			kittenB: this.state.rightKitten._id
@@ -116,7 +109,7 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 			this._disableClick = false;
 		} catch (e) {
 			if (e.status === 401) {
-				overwriteNavigation(this.props.navigation, 'Unlogged');
+				LoginService.logout(this.props.navigation);
 			}
 		}
 	}
@@ -158,6 +151,14 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 	}
 
 	render() {
+		if (this.state.empty) {
+			return (
+				<View style={[alignCenter, { height: '100%', width: '100%' }]}>
+					<Text style={textStyle}>No kittens to load</Text>
+					<Text style={textStyle}>INSERT KITTEN!</Text>
+				</View>
+			);
+		}
 		const borderWidth = 10;
 		const height = this.state.viewSize
 			? this.state.viewSize.height - borderWidth
@@ -168,14 +169,59 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 				height: height / 2,
 				borderRadius: 10,
 				overflow: 'hidden'
-			}
+			},
+			text: { ...textStyle, color: 'white' }
 		});
+
+		const getKittenRender = (kitten: IKitten) =>
+			kitten ? (
+				<Border style={style.imageContainer}>
+					<ImageDisplay
+						style={{ alignItems: 'center' }}
+						disabled={this._disableClick}
+						onLoadingStart={() => this.onKittenImageChangeStart()}
+						onLoadingEnd={() => this.onKittenImageChangeEnd()}
+						disableRadius={true}
+						key={kitten.savedName}
+						imageID={kitten.savedName}
+						onClick={this.voteKitten.bind(this)}
+					/>
+				</Border>
+			) : null;
 
 		return (
 			<View
 				style={{
-					flex: 1,
+					flex: 1
 				}}>
+				<Loading
+					getRef={ref => {
+						this._loadingRef = ref;
+					}}
+					onLoadStart={() => this.onLoadStart()}
+					onLoadEnd={() => this.onLoadEnd()}
+				/>
+
+				{this.state.showScore && (
+					<View
+						style={{
+							position: 'absolute',
+							zIndex: 2000,
+							height: "100%",
+							backgroundColor:styleBase.primaryColor,
+							width: '100%',
+							justifyContent: 'center',
+							alignItems: 'center'
+						}}>
+						{this.state.win && (
+							<Text style={style.text}>You WON!</Text>
+						)}
+						{!this.state.win && (
+							<Text style={style.text}>You Lose :(</Text>
+						)}
+					</View>
+				)}
+
 				<View
 					onLayout={e => this.measureView(e.nativeEvent.layout)}
 					style={{
@@ -185,69 +231,9 @@ export class Kittens extends React.Component<KittensProps, KittensState> {
 						borderWidth: 5,
 						borderColor: 'transparent'
 					}}>
-					<Loading
-						featuresNumber={2}
-						getRef={ref => (this._loadingRef = ref)}
-					/>
-					{this.state.showScore && (
-						<View
-							style={{
-								position: 'absolute',
-								zIndex: 1000,
-								height: height,
-								width: '100%',
-								justifyContent: 'center',
-								alignItems: 'center'
-							}}>
-							{this.state.win && (
-								<Text style={[textStyle, { color: 'white' }]}>
-									You WON!
-								</Text>
-							)}
-							{!this.state.win && (
-								<Text style={[textStyle, { color: 'white' }]}>
-									You Lose :(
-								</Text>
-							)}
-						</View>
-					)}
-					{!this.state.loading && this.state.empty && (
-						<Text>No kittens to load - INSERT KITTEN</Text>
-					)}
-
-					{this.state.leftKitten && (
-						<Border style={style.imageContainer}>
-							<ImageDisplay
-								onLoadingStart={() =>
-									this.onKittenImageChangeStart()
-								}
-								onLoadingEnd={() =>
-									this.onKittenImageChangeEnd()
-								}
-								disableRadius={true}
-								key={this.state.leftKitten.savedName}
-								imageID={this.state.leftKitten.savedName}
-								onClick={this.voteKitten.bind(this)}
-							/>
-						</Border>
-					)}
+					{getKittenRender(this.state.leftKitten)}
 					<View style={{ height: 1, width: '100%' }} />
-					{this.state.rightKitten && (
-						<Border style={style.imageContainer}>
-							<ImageDisplay
-								onLoadingStart={() =>
-									this.onKittenImageChangeStart()
-								}
-								onLoadingEnd={() =>
-									this.onKittenImageChangeEnd()
-								}
-								disableRadius={true}
-								key={this.state.rightKitten.savedName}
-								imageID={this.state.rightKitten.savedName}
-								onClick={this.voteKitten.bind(this)}
-							/>
-						</Border>
-					)}
+					{getKittenRender(this.state.rightKitten)}
 				</View>
 			</View>
 		);

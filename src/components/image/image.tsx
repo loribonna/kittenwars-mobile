@@ -7,8 +7,9 @@ import {
 	Image,
 	Text,
 	TouchableHighlight,
-	Dimensions,
-	LayoutRectangle
+	LayoutRectangle,
+	StyleProp,
+	ViewStyle
 } from 'react-native';
 import { styleBase } from '../../helpers/style.base';
 import { Border } from '../border/border';
@@ -22,6 +23,8 @@ interface ImageDisplayProps {
 	disableRadius?: boolean;
 	onLoadingStart?: (ref: ImageDisplay) => void;
 	enableCenterOffset?: boolean;
+	disabled?: boolean;
+	style?: StyleProp<ViewStyle>;
 }
 
 interface ContainerDim {
@@ -103,6 +106,7 @@ export class ImageDisplay extends React.Component<
 	}
 
 	async componentDidUpdate() {
+		this._mounted = true;
 		if (
 			this.state.imageID != this.props.imageID ||
 			this.state.fullUri != this.props.fullUri
@@ -121,14 +125,18 @@ export class ImageDisplay extends React.Component<
 
 	_getImgRatio(img: string): Promise<number> {
 		return new Promise<number>((resolve, reject) => {
-			if (!img) {
-				resolve(1);
-			} else {
-				Image.getSize(
-					img,
-					(w, h) => resolve(h / w),
-					e => reject(e)
-				);
+			try {
+				if (!img) {
+					resolve(1);
+				} else {
+					Image.getSize(
+						img,
+						(w, h) => resolve(h / w),
+						e => reject(e)
+					);
+				}
+			} catch (e) {
+				reject(e);
 			}
 		});
 	}
@@ -190,7 +198,6 @@ export class ImageDisplay extends React.Component<
 					loading: false,
 					imgRatio: ratio
 				});
-
 				this.props.onLoadingEnd ? this.props.onLoadingEnd(this) : null;
 			}
 		} catch (e) {
@@ -199,11 +206,9 @@ export class ImageDisplay extends React.Component<
 	}
 
 	getImg(img?: string) {
-		if (img) {
-			return 'data:image/png;base64,' + img;
-		}
-		if (this.state.img) {
-			return 'data:image/png;base64,' + this.state.img;
+		const image = img ? img : this.state.img;
+		if (image) {
+			return 'data:image/png;base64,' + image;
 		}
 	}
 
@@ -243,7 +248,8 @@ export class ImageDisplay extends React.Component<
 		if (this.state.imgRatio >= 1) {
 			//height greater or equal width
 			const h = contH;
-			const w = contH * this.state.imgRatio;
+			const w = contH / this.state.imgRatio;
+
 			return {
 				height: h,
 				width: w
@@ -251,7 +257,6 @@ export class ImageDisplay extends React.Component<
 		} else {
 			const w = containerSize.width;
 			const h = w * this.state.imgRatio;
-
 			return {
 				height: h,
 				width: w
@@ -276,62 +281,59 @@ export class ImageDisplay extends React.Component<
 	}
 
 	render() {
-		let labelDisplay: () => JSX.Element = () => null;
-		if (this.props.label) {
-			labelDisplay = () => {
-				return (
-					<View
-						onLayout={e => this.measureLabel(e.nativeEvent.layout)}
-						style={{
-							alignItems: 'center',
-							justifyContent: 'center',
-							backgroundColor: styleBase.neutralColor
-						}}>
-						<Text
-							style={{
-								color: styleBase.textColor,
-								paddingTop: 5
-							}}>
-							{this.props.label}
-						</Text>
-					</View>
-				);
-			};
-		} else {
+		if (!this.props.label) {
 			this._labelSetup = true;
 		}
 
-		const imageDisplay: () => JSX.Element = () => {
-			return (
-				<View style={this.getImgContainerSize()}>
-					<Border
-						width={2}
+		const LabelDisplay: JSX.Element = this.props.label ? (
+			<View
+				onLayout={e => this.measureLabel(e.nativeEvent.layout)}
+				style={{
+					alignItems: 'center',
+					justifyContent: 'center',
+					backgroundColor: styleBase.neutralColor
+				}}>
+				<Text
+					style={{
+						color: styleBase.textColor,
+						paddingTop: 5
+					}}>
+					{this.props.label}
+				</Text>
+			</View>
+		) : null;
+
+		const ImageDisplay: JSX.Element = (
+			<View style={this.getImgContainerSize()}>
+				<Border
+					width={2}
+					style={[
+						this.props.disableRadius
+							? null
+							: {
+									borderRadius: 10,
+									overflow: 'hidden'
+							  },
+						{
+							marginTop: this.getContainerOffset(),
+							backgroundColor:styleBase.neutralColor
+						},
+						this.props.style
+					]}>
+					<Image
+						source={{ uri: this.getImg() }}
 						style={[
-							this.props.disableRadius
-								? null
-								: {
-										borderRadius: 10,
-										overflow: 'hidden'
-								  },
 							{
-								marginTop: this.getContainerOffset()
-							}
-						]}>
-						<Image
-							source={{ uri: this.getImg() }}
-							style={[
-								{
-									resizeMode: 'contain'
-								},
-								this.getImgSize()
-							]}
-							key={this.state.imageID}
-						/>
-						{labelDisplay()}
-					</Border>
-				</View>
-			);
-		};
+								resizeMode: "contain"
+							},
+							this.getImgSize()
+						]}
+						key={this.state.imageID}
+					/>
+					{LabelDisplay}
+				</Border>
+			</View>
+		);
 
 		return (
 			<View
@@ -340,11 +342,16 @@ export class ImageDisplay extends React.Component<
 				}}
 				onLayout={event => this.measureView(event.nativeEvent.layout)}>
 				{this.props.onClick && (
-					<TouchableHighlight onPress={this.imageClick.bind(this)}>
-						{imageDisplay()}
+					<TouchableHighlight
+						onPress={
+							this.props.disabled
+								? null
+								: this.imageClick.bind(this)
+						}>
+						{ImageDisplay}
 					</TouchableHighlight>
 				)}
-				{!this.props.onClick && imageDisplay()}
+				{!this.props.onClick && ImageDisplay}
 			</View>
 		);
 	}

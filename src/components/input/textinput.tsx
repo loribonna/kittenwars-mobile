@@ -2,17 +2,13 @@ import * as React from 'react';
 import {
 	Text,
 	StyleSheet,
-	View,
 	NativeEventSubscription,
 	Keyboard,
-	NativeSyntheticEvent,
-	TextInputKeyPressEventData,
 	StyleProp,
 	ViewStyle
 } from 'react-native';
 import { SubjectData } from '../../helpers/types';
 import { TextInput } from 'react-native-gesture-handler';
-import { styleBase } from '../../helpers/style.base';
 import { Border } from '../border/border';
 
 interface TextInputProps {
@@ -127,7 +123,6 @@ export class CustomTextInput extends React.Component<
 						this.props.type === 'number' ? 'numeric' : 'default'
 					}
 					onResponderStart={this.startEditing.bind(this)}
-					// style={style.textInput}
 					placeholder={this.props.placeholder}
 					maxLength={this.props.maxlen ? this.props.maxlen : null}
 					value={this.state.value}
