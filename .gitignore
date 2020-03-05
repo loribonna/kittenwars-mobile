@@ -57,5 +57,8 @@ buck-out/
 
 # Environment
 .prettierrc
-
 .env
+
+# build
+ 
+android/build
