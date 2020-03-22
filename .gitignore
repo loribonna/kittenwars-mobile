@@ -62,3 +62,4 @@ buck-out/
 # build
  
 android/build
+android/app/src/main/assets/index.android.bundle
