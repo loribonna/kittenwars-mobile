@@ -1,7 +1,7 @@
 keystore(
     name = "debug",
     properties = "debug.keystore.properties",
-    store = "kittenwars.keystore",
+    store = "debug.keystore",
     visibility = [
         "PUBLIC",
     ],
